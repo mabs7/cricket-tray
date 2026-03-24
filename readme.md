@@ -9,7 +9,7 @@ A lightweight cross-platform menu bar / system tray widget that shows live Pakis
 | Platform | Download |
 |---|---|
 | 🍎 macOS | [PakCricket.zip](../../releases/latest) — unzip and double-click `PakCricket.app` |
-| 🪟 Windows | Coming soon |
+| 🪟 Windows | [PakCricket.Windows.zip](../../releases/latest) — unzip and double-click `PakCricket.app` |
 
 ---
 
