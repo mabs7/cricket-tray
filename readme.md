@@ -1,62 +1,109 @@
-# 🏏 Pakistan Cricket Live Score Tray Widget
+# 🏏 Pakistan Cricket Live Score Widget
 
-A lightweight Windows system tray widget that shows live Pakistan cricket scores — no API key required.
+A lightweight cross-platform menu bar / system tray widget that shows live Pakistan cricket scores — no API key, no cost, fully free.
+
+---
+
+## Download (No Python Required)
+
+| Platform | Download |
+|---|---|
+| 🍎 macOS | [PakCricket.zip](../../releases/latest) — unzip and double-click `PakCricket.app` |
+| 🪟 Windows | Coming soon |
 
 ---
 
 ## Features
-- 🔴 Live match → red icon, refreshes every **60 seconds**
-- 🟠 Match scheduled today → orange icon, refreshes every **5 minutes**
-- ⚫ No match → grey icon, refreshes every **30 minutes**
+
+- 🔴 **Live match** → red icon, refreshes every **60 seconds**
+- 🟠 **Match scheduled today** → orange icon, refreshes every **5 minutes**
+- ⚫ **No match** → grey icon, refreshes every **30 minutes**
 - Click icon → popup with full match details
-- Filters: Pakistan international + PSL matches only
+- Filters: **Pakistan international + PSL matches only**
+- No API key needed — scrapes Cricbuzz directly
+- Works on **macOS** (menu bar) and **Windows** (system tray)
 
 ---
 
-## Setup
+## Run from Source (Developers)
 
-### 1. Install Python
-Download Python 3.11+ from https://python.org and install it.
-Make sure to check **"Add Python to PATH"** during install.
+### Requirements
+- Python 3.11+
+- pip
 
-### 2. Install dependencies
-Open a terminal (CMD or PowerShell) in this folder and run:
-```
-pip install -r requirements.txt
+### macOS
+
+```bash
+git clone https://github.com/YOUR_USERNAME/cricket-tray.git
+cd cricket-tray
+
+python3 -m venv venv
+source venv/bin/activate
+
+pip install requests beautifulsoup4 lxml rumps
+python3 main.py
 ```
 
-### 3. Run the widget
-```
+The score appears in your **menu bar** (top right).
+
+### Windows
+
+```bash
+git clone https://github.com/YOUR_USERNAME/cricket-tray.git
+cd cricket-tray
+
+python -m venv venv
+venv\Scripts\activate
+
+pip install requests beautifulsoup4 lxml pystray Pillow
 python main.py
 ```
-The cricket ball icon will appear in your system tray (bottom-right taskbar area).
+
+The score appears in your **system tray** (bottom right).
 
 ---
 
 ## Usage
-- **Hover** over the tray icon → see current score as tooltip
-- **Left-click** or **right-click → Show Score** → opens score popup
-- **Right-click → Quit** → closes the widget
+
+| Action | Result |
+|---|---|
+| Look at menu bar / tray | See live score as text |
+| Click the icon | Opens score popup |
+| Click "Show Score" | Full match details |
+| Click "Quit" | Closes the widget |
 
 ---
 
-## Auto-start with Windows (optional)
-1. Press `Win + R`, type `shell:startup`, press Enter
-2. Create a shortcut to `main.py` (or the `.exe`) in that folder
+## Auto-start (optional)
 
----
+**macOS:** System Settings → General → Login Items → add `PakCricket.app`
 
-## Package as .exe (optional)
-To share with others without Python installed:
-```
-pip install pyinstaller
-pyinstaller --onefile --windowed --name PakCricket main.py
-```
-The `.exe` will be in the `dist/` folder.
+**Windows:** Press `Win + R` → type `shell:startup` → create a shortcut to `PakCricket.exe`
 
 ---
 
 ## Troubleshooting
-- **No scores showing?** Cricbuzz may have updated their HTML. Run `scraper.py` standalone to debug.
-- **Icon not appearing?** Make sure `pystray` and `Pillow` installed correctly.
-- **Scores delayed?** This is normal — data is scraped from Cricbuzz, not a real-time API.
+
+- **No scores showing?** There may be no Pakistan match today — this is expected behaviour.
+- **Scores look wrong?** Cricbuzz occasionally updates their HTML structure. Open an issue and it'll be fixed quickly.
+- **Icon not appearing on Mac?** Make sure you allowed permissions in System Settings → Privacy & Security.
+- **Scores delayed?** Normal — data is scraped from Cricbuzz, not a real-time API.
+
+---
+
+## Tech Stack
+
+- `requests` + `BeautifulSoup` — scrapes Cricbuzz live scores
+- `rumps` — macOS menu bar
+- `pystray` + `Pillow` — Windows system tray
+- `pyinstaller` — packaging
+
+---
+
+## Contributing
+
+Pull requests welcome! If Cricbuzz updates their HTML and scores break, the fix is usually a one-line class name change in `scraper.py`.
+
+---
+
+*Built with ❤️ for Pakistan cricket fans*
