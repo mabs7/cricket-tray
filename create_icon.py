@@ -1,4 +1,18 @@
+"""
+create_icon.py
+Generates a cricket ball icon:
+  - macOS   → icon.icns (via iconutil)
+  - Windows → icon.ico  (via Pillow)
+
+Run this once before building the app with PyInstaller.
+
+Usage:
+    python3 create_icon.py   (Mac)
+    python  create_icon.py   (Windows)
+"""
+
 import os
+import sys
 from PIL import Image, ImageDraw
 
 def draw_cricket_ball(size):
@@ -46,36 +60,48 @@ def draw_cricket_ball(size):
 
 
 def create_icns():
-    """Generate icon.icns for macOS from multiple sizes."""
-    # Mac requires these specific sizes in an iconset
+    """Generate icon.icns for macOS using iconutil."""
+    import shutil
     sizes = [16, 32, 64, 128, 256, 512, 1024]
-
     iconset_dir = "icon.iconset"
     os.makedirs(iconset_dir, exist_ok=True)
 
     for size in sizes:
         img = draw_cricket_ball(size)
-        # Standard
         img.save(f"{iconset_dir}/icon_{size}x{size}.png")
-        # Retina (@2x) — skip for 1024
         if size <= 512:
             img2x = draw_cricket_ball(size * 2)
             img2x.save(f"{iconset_dir}/icon_{size}x{size}@2x.png")
 
-    # Use macOS iconutil to convert iconset → icns
     result = os.system("iconutil -c icns icon.iconset -o icon.icns")
     if result == 0:
         print("✅ icon.icns created successfully!")
+        shutil.rmtree(iconset_dir)
+        print("🧹 Cleaned up icon.iconset folder")
+        print("📦 Now run: pyinstaller --onefile --windowed --icon=icon.icns --name PakCricket main.py")
     else:
-        print("❌ iconutil failed. Are you on macOS?")
-        return
+        print("❌ iconutil failed.")
 
-    # Cleanup iconset folder
-    import shutil
-    shutil.rmtree(iconset_dir)
-    print("🧹 Cleaned up icon.iconset folder")
-    print("📦 Now rebuild with: pyinstaller --onefile --windowed --icon=icon.icns --name PakCricket main.py")
+
+def create_ico():
+    """Generate icon.ico for Windows using Pillow."""
+    # Windows .ico supports multiple sizes in one file
+    sizes = [16, 32, 48, 64, 128, 256]
+    images = [draw_cricket_ball(size) for size in sizes]
+
+    # Save as .ico with all sizes embedded
+    images[0].save(
+        "icon.ico",
+        format="ICO",
+        sizes=[(s, s) for s in sizes],
+        append_images=images[1:],
+    )
+    print("✅ icon.ico created successfully!")
+    print("📦 Now run: pyinstaller --onefile --windowed --icon=icon.ico --name PakCricket main.py")
 
 
 if __name__ == "__main__":
-    create_icns()
+    if sys.platform == "darwin":
+        create_icns()
+    else:
+        create_ico()
