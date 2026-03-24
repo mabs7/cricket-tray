@@ -75,10 +75,10 @@ def create_icns():
 
     result = os.system("iconutil -c icns icon.iconset -o icon.icns")
     if result == 0:
-        print("✅ icon.icns created successfully!")
+        print("icon.icns created successfully!")
         shutil.rmtree(iconset_dir)
-        print("🧹 Cleaned up icon.iconset folder")
-        print("📦 Now run: pyinstaller --onefile --windowed --icon=icon.icns --name PakCricket main.py")
+        print("Cleaned up icon.iconset folder")
+        print("Now run: pyinstaller --onefile --windowed --icon=icon.icns --name PakCricket main.py")
     else:
         print("❌ iconutil failed.")
 
@@ -96,8 +96,8 @@ def create_ico():
         sizes=[(s, s) for s in sizes],
         append_images=images[1:],
     )
-    print("✅ icon.ico created successfully!")
-    print("📦 Now run: pyinstaller --onefile --windowed --icon=icon.ico --name PakCricket main.py")
+    print("icon.ico created successfully!")
+    print("Now run: pyinstaller --onefile --windowed --icon=icon.ico --name PakCricket main.py")
 
 
 if __name__ == "__main__":
