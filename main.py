@@ -114,10 +114,11 @@ else:
     import pystray
     from PIL import Image, ImageDraw
 
-    tray_icon  = None
-    float_bar  = None   # the always-on-top floating window
-    bar_label  = None   # label inside the bar
-    bar_hidden = False  # toggle visibility
+    tray_icon   = None
+    float_bar   = None   # the always-on-top floating window
+    bar_label   = None   # label inside the bar
+    bar_hidden  = False  # toggle visibility
+    popup_open  = False  # prevent multiple popups
 
     # ── Icon drawing ──────────────────────────────────────────────────────────
     def create_icon_image(color="#00A550"):
@@ -185,20 +186,49 @@ else:
         float_bar.geometry(f"+{x}+{y}")
 
     def update_bar():
-        """Refresh the floating bar text and colour. Called from main thread."""
-        if bar_label and float_bar:
-            bar_label.config(text=current_text, bg=get_bar_color(current_state))
-            float_bar.configure(bg=get_bar_color(current_state))
-        float_bar.after(2000, update_bar)   # re-check every 2s
+        """Refresh the floating bar text and colour. Always reschedules itself."""
+        try:
+            if bar_label and float_bar and not bar_hidden:
+                bar_label.config(text=current_text, bg=get_bar_color(current_state))
+                float_bar.configure(bg=get_bar_color(current_state))
+        except Exception:
+            pass  # never let a crash kill the loop
+        finally:
+            float_bar.after(2000, update_bar)  # always reschedule
 
     # ── Detail popup ──────────────────────────────────────────────────────────
+    def _restore_bar():
+        """Safely restore floating bar after popup closes."""
+        try:
+            float_bar.lift()
+            float_bar.attributes("-topmost", True)
+            float_bar.deiconify()
+        except Exception:
+            pass
+
     def show_detail_popup():
-        popup = tk.Toplevel(float_bar)
+        global popup_open
+        if popup_open:
+            return  # block if already open
+
+        popup_open = True
+        popup = tk.Toplevel()  # use Toplevel without parent to avoid destroy linkage
         popup.title("PAK Cricket")
         popup.geometry("420x320")
         popup.configure(bg="#1a1a2e")
         popup.resizable(False, False)
         popup.attributes("-topmost", True)
+
+        # Keep floating bar visible while popup is open
+        _restore_bar()
+
+        # Re-assert floating bar when popup closes
+        def on_popup_close():
+            global popup_open
+            popup_open = False
+            popup.destroy()
+            float_bar.after(100, _restore_bar)  # small delay lets destroy finish first
+        popup.protocol("WM_DELETE_WINDOW", on_popup_close)
 
         tk.Label(popup, text="🏏 Pakistan Cricket", font=("Segoe UI", 14, "bold"),
                  fg="#00A550", bg="#1a1a2e", pady=10).pack(fill="x")
@@ -227,24 +257,31 @@ else:
         state_map = {"live": "🔴 LIVE", "today": "🟠 Scheduled", "none": "⚫ No live match"}
         tk.Label(popup, text=state_map.get(current_state, ""), font=("Segoe UI", 9),
                  fg="#888888", bg="#1a1a2e", pady=6).pack()
-        tk.Button(popup, text="Close", command=popup.destroy, bg="#00A550",
+        tk.Button(popup, text="Close", command=on_popup_close, bg="#00A550",
                   fg="white", font=("Segoe UI", 10), relief="flat", padx=20).pack(pady=(0, 10))
+        # Restore bar if user clicks away from popup without using Close button
+        popup.bind("<FocusOut>", lambda e: _restore_bar())
 
     # ── Tray menu actions ─────────────────────────────────────────────────────
     def toggle_bar(icon, item):
-        global bar_hidden
-        bar_hidden = not bar_hidden
-        if bar_hidden:
-            float_bar.withdraw()
-        else:
-            float_bar.deiconify()
+        """Thread-safe toggle — schedule on tkinter main thread."""
+        def _do_toggle():
+            global bar_hidden
+            bar_hidden = not bar_hidden
+            if bar_hidden:
+                float_bar.withdraw()
+            else:
+                float_bar.deiconify()
+                float_bar.attributes("-topmost", True)  # re-assert topmost on show
+        float_bar.after(0, _do_toggle)
 
     def show_popup_from_tray(icon, item):
+        """Thread-safe popup — schedule on tkinter main thread."""
         float_bar.after(0, show_detail_popup)
 
     def quit_app(icon, item):
+        float_bar.after(0, float_bar.destroy)
         icon.stop()
-        float_bar.destroy()
 
     # ── Refresh loop ──────────────────────────────────────────────────────────
     def refresh_loop():
