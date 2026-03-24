@@ -1,0 +1,95 @@
+name: Build & Release
+
+# Triggers when you push a tag like v2.1, v3.0 etc.
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+
+  # ── macOS build ─────────────────────────────────────────────────────────────
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 lxml rumps pyinstaller Pillow
+
+      - name: Generate icon
+        run: python3 create_icon.py
+
+      - name: Build .app
+        run: pyinstaller --onefile --windowed --icon=icon.icns --name PakCricket main.py
+
+      - name: Zip .app
+        run: cd dist && zip -r PakCricket-Mac.zip PakCricket.app
+
+      - name: Upload Mac artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PakCricket-Mac
+          path: dist/PakCricket-Mac.zip
+
+  # ── Windows build ────────────────────────────────────────────────────────────
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 lxml pystray Pillow pyinstaller
+
+      - name: Generate icon
+        run: python create_icon.py
+
+      - name: Build .exe
+        run: pyinstaller --onefile --windowed --icon=icon.ico --name PakCricket main.py
+
+      - name: Zip .exe
+        run: Compress-Archive -Path dist/PakCricket.exe -DestinationPath dist/PakCricket-Windows.zip
+        shell: powershell
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PakCricket-Windows
+          path: dist/PakCricket-Windows.zip
+
+  # ── Create GitHub Release ────────────────────────────────────────────────────
+  release:
+    needs: [build-mac, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Mac artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: PakCricket-Mac
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: PakCricket-Windows
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            PakCricket-Mac.zip
+            PakCricket-Windows.zip
+          generate_release_notes: true
