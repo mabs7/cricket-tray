@@ -1,0 +1,13 @@
+# Shared (both platforms)
+requests==2.31.0
+beautifulsoup4==4.12.3
+lxml==5.2.1
+
+# macOS only
+# Install with: pip install rumps
+rumps==0.4.0
+
+# Windows only
+# Install with: pip install pystray Pillow
+pystray==0.19.5
+Pillow==10.3.0
