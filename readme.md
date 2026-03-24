@@ -9,10 +9,10 @@ A lightweight cross-platform widget that shows live Pakistan cricket scores — 
 
 ## Download (No Python Required)
 
-| Platform | Download | Instructions |
-|---|---|---|
-| 🍎 macOS | [PakCricket.zip](../../releases/latest) | Unzip → double-click `PakCricket.app` |
-| 🪟 Windows | [PakCricket.Windows.zip](../../releases/latest) | Unzip → double-click `PakCricket.exe` |
+| Platform | Download |
+|---|---|
+| 🍎 macOS | [PakCricket.zip](../../releases/latest) — unzip and double-click `PakCricket.app` |
+| 🪟 Windows | Coming soon |
 
 ---
 
@@ -153,4 +153,4 @@ Pull requests welcome! If Cricbuzz updates their HTML and scores break, the fix 
 
 ---
 
-*Built with ❤️ for Pakistan cricket fans. Good luck PAKISTAN! 🏏*
+*Built with ❤️ for Pakistan cricket fans*
