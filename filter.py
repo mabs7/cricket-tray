@@ -4,7 +4,12 @@ Filters match data to Pakistan and PSL matches only.
 """
 
 PAK_KEYWORDS = [
-    "pakistan", "pak", "psl", "pakistan super league"
+    # Country / league name
+    "pakistan", "pak", "psl", "pakistan super league", "hbl psl",
+    # PSL 2026 team names
+    "lahore qalandars", "karachi kings", "peshawar zalmi",
+    "quetta gladiators", "islamabad united", "multan sultans",
+    "hyderabad kingsmen", "rawalpindi pindiz",
 ]
 
 
