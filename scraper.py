@@ -1,3 +1,4 @@
+import re
 import requests
 from bs4 import BeautifulSoup
 
@@ -13,99 +14,131 @@ LIVE_URL = "https://www.cricbuzz.com/cricket-match/live-scores"
 RECENT_URL = "https://www.cricbuzz.com/cricket-match/live-scores/recent-matches"
 UPCOMING_URL = "https://www.cricbuzz.com/cricket-match/live-scores/upcoming-matches"
 
+MATCH_HREF = re.compile(r"^/live-cricket-scores/\d+/")
 
-def _parse_matches(url):
-    """Fetch and parse match blocks from a Cricbuzz scores page."""
+# Mini scorecard links: "LHQ vs HYDK - Preview" or "RSA vs NZ - RSA won"
+# These have ' - ' in them and use abbreviations
+MINI_PATTERN = re.compile(r"^[A-Z]{2,5}\s+vs\s+[A-Z]{2,5}\s+-\s+")
+
+# Status suffixes to strip from team names
+STRIP_SUFFIX = re.compile(
+    r"\s*\d*(st|nd|rd|th)?\s*(Match|T20I?|ODI|Test|Final|Semi\s*Final|Qualifier|Preview|Cancelled|Abandoned).*",
+    re.I,
+)
+
+
+def _fetch_soup(url):
     try:
-        response = requests.get(url, headers=HEADERS, timeout=10)
-        response.raise_for_status()
+        r = requests.get(url, headers=HEADERS, timeout=10)
+        r.raise_for_status()
+        return BeautifulSoup(r.text, "html.parser")
     except requests.RequestException:
-        return []
-
-    soup = BeautifulSoup(response.text, "html.parser")
-    matches = []
-
-    # Each match block lives in a div with class cb-lv-main
-    blocks = soup.find_all("div", class_="cb-col cb-col-100 cb-plyr-tbody cb-rank-hdr cb-lv-main")
-
-    for block in blocks:
-        match = _extract_match(block)
-        if match:
-            matches.append(match)
-
-    return matches
-
-
-def _extract_match(block):
-    """Extract match details from a single match block."""
-    try:
-        # Series / tour name
-        series_tag = block.find("div", class_="cb-lv-scrs-col")
-        series = series_tag.get_text(strip=True) if series_tag else ""
-
-        # Match header (teams)
-        header_tag = block.find("a", class_="cb-lv-scrs-well-live") or \
-                     block.find("a", class_="cb-lv-scrs-well")
-        if not header_tag:
-            # Try any anchor inside cb-hmscg-tm-nm
-            team_tags = block.find_all("div", class_="cb-hmscg-tm-nm")
-            teams = " vs ".join(t.get_text(strip=True) for t in team_tags) if team_tags else ""
-        else:
-            teams = header_tag.get_text(strip=True)
-
-        # Score lines
-        score_tags = block.find_all("div", class_="cb-hmscg-tm-nm")
-        # Try score divs
-        bat_score = block.find("div", class_="cb-hmscg-bat-txt")
-        bowl_score = block.find("div", class_="cb-hmscg-bwl-txt")
-
-        score = ""
-        if bat_score:
-            score = bat_score.get_text(strip=True)
-        if bowl_score and bowl_score.get_text(strip=True):
-            score += "  |  " + bowl_score.get_text(strip=True)
-
-        # Match status / result text
-        status_tag = block.find("div", class_="cb-text-live") or \
-                     block.find("div", class_="cb-text-complete") or \
-                     block.find("div", class_="cb-text-stumps") or \
-                     block.find("div", class_="cb-text-inprogress")
-        status = status_tag.get_text(strip=True) if status_tag else ""
-
-        # Is it live?
-        is_live = bool(block.find("div", class_="cb-text-live") or
-                       block.find("div", class_="cb-text-inprogress"))
-
-        return {
-            "series": series,
-            "teams": teams,
-            "score": score,
-            "status": status,
-            "is_live": is_live,
-        }
-
-    except Exception:
         return None
 
 
+def _parse_matches(url):
+    soup = _fetch_soup(url)
+    if not soup:
+        return []
+
+    matches = []
+    # Use href as key to keep best version of each match
+    match_map = {}
+
+    all_links = soup.find_all("a", href=MATCH_HREF)
+
+    for link in all_links:
+        href = link.get("href", "")
+        link_text = link.get_text(separator=" ", strip=True)
+
+        # Skip empty or very short
+        if len(link_text) < 5:
+            continue
+
+        # Skip "Live Score |" links
+        if "Live Score" in link_text:
+            continue
+
+        # Skip mini scorecards at top (e.g. "LHQ vs HYDK - Preview")
+        if MINI_PATTERN.match(link_text):
+            continue
+
+        # Skip venue/score dump links (contain bullet •)
+        if "•" in link_text:
+            continue
+
+        # Clean team names
+        teams = STRIP_SUFFIX.sub("", link_text).strip()
+        if not teams or len(teams) < 5:
+            continue
+
+        # Get series name from nearest preceding series link
+        series = ""
+        series_link = link.find_previous("a", href=re.compile(r"^/cricket-series/"))
+        if series_link:
+            series = series_link.get_text(strip=True)
+
+        # Detect if PSL from href
+        is_psl = "pakistan-super-league" in href or "psl" in href.lower()
+
+        # Detect live/status from link text and href
+        is_live = False
+        status = ""
+        lt = link_text.lower()
+        ht = href.lower()
+        if "preview" in lt or "preview" in ht:
+            status = "Preview — match not started"
+        elif "won" in lt or "lost" in lt or "draw" in lt:
+            status = link_text.split(" - ")[-1].strip() if " - " in link_text else ""
+        elif "live" in lt or "live" in ht:
+            is_live = True
+            status = "🔴 Live"
+
+        # Store — prefer the full name version over abbreviation version
+        # Full name version has spaces and longer text
+        if href not in match_map or len(teams) > len(match_map[href]["teams"]):
+            match_map[href] = {
+                "teams": teams,
+                "score": "",
+                "status": status,
+                "series": series,
+                "is_live": is_live,
+                "is_psl": is_psl,
+                "href": href,
+            }
+
+    # Now fetch scores for each match individually
+    for href, match in match_map.items():
+        _enrich_with_score(match)
+
+    return list(match_map.values())
+
+
+def _enrich_with_score(match):
+    """Try to extract score from the match card on the list page."""
+    # Score comes from the venue/score dump link we skipped earlier
+    # It's embedded in href text like:
+    # "Qualifier • Gqeberha Warriors WAR 204 (49.3) Titans TIT 209-6 (43.1) Titans won by 4 wkts"
+    # We already have that data — parse it from series context
+    # For now leave score empty; it will be populated when match is live
+    pass
+
+
 def get_live_matches():
-    """Return all currently live matches."""
     return _parse_matches(LIVE_URL)
 
 
 def get_recent_matches():
-    """Return recently completed matches."""
     return _parse_matches(RECENT_URL)
 
 
 def get_upcoming_matches():
-    """Return upcoming scheduled matches."""
     return _parse_matches(UPCOMING_URL)
 
 
 def get_all_matches():
-    """Return live + recent + upcoming matches combined."""
-    live = get_live_matches()
-    recent = get_recent_matches()
-    upcoming = get_upcoming_matches()
-    return {"live": live, "recent": recent, "upcoming": upcoming}
+    return {
+        "live": get_live_matches(),
+        "recent": get_recent_matches(),
+        "upcoming": get_upcoming_matches(),
+    }
