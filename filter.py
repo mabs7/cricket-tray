@@ -5,13 +5,6 @@ Filters match data to Pakistan and PSL matches only.
 
 PAK_KEYWORDS = [
     # Country / league name
-<<<<<<< HEAD
-    "pakistan", "pak", "psl", "pakistan super league", "hbl psl",
-    # PSL 2026 team names
-    "lahore qalandars", "karachi kings", "peshawar zalmi",
-    "quetta gladiators", "islamabad united", "multan sultans",
-    "hyderabad kingsmen", "rawalpindi pindiz",
-=======
     "pakistan",
     "pak",
     "psl",
@@ -26,7 +19,6 @@ PAK_KEYWORDS = [
     "multan sultans",
     "hyderabad kingsmen",
     "rawalpindi pindiz",
->>>>>>> a4c1156 (Fixed scraper for new cricbuzz layout)
 ]
 
 
