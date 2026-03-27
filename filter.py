@@ -81,18 +81,27 @@ def get_match_state(all_matches: dict) -> tuple:
         'today'    - Pakistan match scheduled today but not started
         'none'     - No Pakistan match found anywhere
     """
-    live_pak = _deduplicate(filter_pakistan_matches(all_matches.get("live", [])))
-    if live_pak:
-        return "live", live_pak
-
-    upcoming_pak = _deduplicate(
-        filter_pakistan_matches(all_matches.get("upcoming", []))
+    # Combine all matches and deduplicate
+    all_pak = _deduplicate(
+        filter_pakistan_matches(
+            all_matches.get("live", [])
+            + all_matches.get("upcoming", [])
+            + all_matches.get("recent", [])
+        )
     )
-    if upcoming_pak:
-        return "today", upcoming_pak
 
-    recent_pak = _deduplicate(filter_pakistan_matches(all_matches.get("recent", [])))
-    if recent_pak:
-        return "none", recent_pak
+    # Check for truly live matches (enriched is_live flag)
+    truly_live = [m for m in all_pak if m.get("is_live")]
+    if truly_live:
+        return "live", truly_live
+
+    # Check for upcoming/preview matches
+    upcoming = [m for m in all_pak if m.get("status") == "Preview"]
+    if upcoming:
+        return "today", upcoming
+
+    # Fall back to recent results
+    if all_pak:
+        return "none", all_pak[:1]  # show only most recent
 
     return "none", []
