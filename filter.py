@@ -73,14 +73,6 @@ def _deduplicate(matches: list) -> list:
 
 
 def get_match_state(all_matches: dict) -> tuple:
-    """
-    Analyse all_matches dict and return (state, pak_matches).
-
-    state:
-        'live'     - Pakistan match is currently live
-        'today'    - Pakistan match scheduled today but not started
-        'none'     - No Pakistan match found anywhere
-    """
     # Combine all matches and deduplicate
     all_pak = _deduplicate(
         filter_pakistan_matches(
@@ -90,17 +82,26 @@ def get_match_state(all_matches: dict) -> tuple:
         )
     )
 
-    # Check for truly live matches (enriched is_live flag)
+    # 1. Check for truly live matches
     truly_live = [m for m in all_pak if m.get("is_live")]
     if truly_live:
         return "live", truly_live
 
-    # Check for upcoming/preview matches
-    upcoming = [m for m in all_pak if m.get("status") == "Preview"]
+    # 2. Check for upcoming/today's matches
+    upcoming = []
+    for m in all_pak:
+        status_lower = m.get("status", "").lower()
+        # If it's explicitly a finished match, skip it
+        is_finished = any(x in status_lower for x in ["won by", "result", "abandoned", "drawn"])
+        
+        # If it has no score, isn't live, and isn't finished, it's scheduled for today
+        if not m.get("score") and not m.get("is_live") and not is_finished:
+            upcoming.append(m)
+
     if upcoming:
         return "today", upcoming
 
-    # Fall back to recent results
+    # 3. Fall back to recent results
     if all_pak:
         return "none", all_pak[:1]  # show only most recent
 

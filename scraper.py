@@ -103,11 +103,22 @@ def _parse_matches(url, page_type="live"):
                 "is_psl": is_psl,
                 "href": href,
             }
+# Quick keyword list to prevent fetching scores for non-Pakistan matches
+    pak_keywords = [
+        "pakistan", "pak", "psl", "qalandars", "kings", "zalmi", 
+        "gladiators", "united", "sultans", "kingsmen", "pindiz"
+    ]
 
-    # Only fetch individual scores for matches that are actually live
+    # Only fetch individual scores for Pakistan matches that might be live
     for href, match in match_map.items():
         if match["is_live"]:
-            _enrich_with_score(match)
+            searchable = (match["teams"] + " " + match["series"] + " " + match["href"]).lower()
+            is_pak = any(k in searchable for k in pak_keywords) or match.get("is_psl")
+            
+            if is_pak:
+                _enrich_with_score(match)
+            else:
+                match["is_live"] = False  # Skip and turn off live flag for other countries
 
     return list(match_map.values())
 
@@ -126,11 +137,13 @@ def _enrich_with_score(match):
 
         text = soup.get_text(separator="\n", strip=True)
         lines = [l.strip() for l in text.split("\n") if l.strip()]
-        joined = " ".join(lines)
+        
+        # THE MAGIC FIX: Only grab the top 40 lines. 
+        # This includes the scoreboard but completely cuts off the "Partnership" commentary!
+        header_lines = lines[:40]
+        joined = " ".join(header_lines)
 
-        # Score is split across lines like:
-        # "LHQ 199 / 6 ( 20 ) HYDK 130 ( 20 )"
-        # After joining, pattern is: TEAM digits / digits ( digits ) ...
+        # Your original, working regex!
         score_pattern = re.compile(
             r"([A-Z]{2,5})\s+(\d+)\s*/\s*(\d+)\s*\(\s*([\d.]+)\s*\)"
         )
@@ -142,12 +155,10 @@ def _enrich_with_score(match):
                 parts.append(f"{team} {runs}/{wkts} ({overs} ov)")
             match["score"] = "  |  ".join(parts)
 
-            # CRR for live matches
             crr = re.search(r"CRR\s*:?\s*([\d.]+)", joined)
             if crr:
                 match["score"] += f"  CRR: {crr.group(1)}"
         else:
-            # Try without wickets (all out): TEAM digits ( digits )
             score_pattern2 = re.compile(r"([A-Z]{2,5})\s+(\d+)\s*\(\s*([\d.]+)\s*\)")
             scores2 = score_pattern2.findall(joined)
             if scores2:
@@ -156,37 +167,16 @@ def _enrich_with_score(match):
                     parts.append(f"{team} {runs} ({overs} ov)")
                 match["score"] = "  |  ".join(parts)
 
-        # Find result/status from individual lines (not joined) to avoid nav pollution
-        # Look for short result line — must be under 60 chars
+        # Find status from the header lines
         status_found = False
-        for line in lines:
+        for line in header_lines:
             ll = line.lower()
-            # Result line
-            if (
-                "won by" in ll
-                or "match drawn" in ll
-                or "tied" in ll
-                or "no result" in ll
-            ) and len(line) < 80:
+            if ("won by" in ll or "match drawn" in ll or "tied" in ll or "no result" in ll) and len(line) < 80:
                 match["status"] = line.strip()
                 match["is_live"] = False
                 status_found = True
                 break
-            # Live status
-            if (
-                any(
-                    kw in ll
-                    for kw in [
-                        "opt to bat",
-                        "opt to field",
-                        "innings break",
-                        "stumps",
-                        "rain",
-                        "drinks",
-                    ]
-                )
-                and 5 < len(line) < 60
-            ):
+            if any(kw in ll for kw in ["opt to bat", "opt to field", "innings break", "stumps", "rain", "drinks", "delayed", "starts at"]) and 5 < len(line) < 60:
                 match["status"] = line.strip()
                 status_found = True
                 break
@@ -195,11 +185,14 @@ def _enrich_with_score(match):
         if not match.get("score"):
             match["is_live"] = False
             if not status_found:
-                match["status"] = "Preview"
+                match["status"] = "Scheduled"
 
     except Exception:
-        pass
-
+        # THE FIX: If the HTTP request fails, force is_live to False so it doesn't create ghost matches!
+        match["is_live"] = False
+        match["score"] = ""
+        if not match.get("status"):
+             match["status"] = "Scheduled"
 
 def get_live_matches():
     return _parse_matches(LIVE_URL, page_type="live")

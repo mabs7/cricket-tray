@@ -17,7 +17,7 @@ from scraper import get_all_matches
 from filter import get_match_state, get_display_text
 
 # ── Refresh intervals ──────────────────────────────────────────────────────────
-INTERVAL_LIVE = 60
+INTERVAL_LIVE = 45
 INTERVAL_TODAY = 300
 INTERVAL_NONE = 1800
 
@@ -161,7 +161,7 @@ else:
 
         # Position: top-right corner
         sw = float_bar.winfo_screenwidth()
-        float_bar.geometry(f"340x32+{sw - 350}+10")
+        float_bar.geometry(f"480x32+{sw - 490}+10")
 
         # Score label
         bar_label = tk.Label(
