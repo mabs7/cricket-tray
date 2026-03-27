@@ -59,28 +59,21 @@ def _parse_matches(url, page_type="live"):
         if not teams or len(teams) < 5:
             continue
 
-        # Series name
         series = ""
         series_link = link.find_previous("a", href=re.compile(r"^/cricket-series/"))
         if series_link:
             series = series_link.get_text(strip=True)
 
-        # PSL detection from href
         is_psl = "pakistan-super-league" in href or "psl" in href.lower()
 
-        # Status from link text only (not href — avoids false "live" from nav)
         lt = link_text.lower()
         status = ""
         if "preview" in lt:
             status = "Preview"
-        elif "won" in lt:
-            status = (
-                link_text.split(" - ")[-1].strip() if " - " in link_text else "Result"
-            )
+        elif "won by" in lt or "won" in lt:
+            status = link_text.split(" - ")[-1].strip() if " - " in link_text else "Result"
         elif "lost" in lt:
-            status = (
-                link_text.split(" - ")[-1].strip() if " - " in link_text else "Result"
-            )
+            status = link_text.split(" - ")[-1].strip() if " - " in link_text else "Result"
         elif "abandon" in lt:
             status = "Abandoned"
         elif "stumps" in lt:
@@ -88,10 +81,10 @@ def _parse_matches(url, page_type="live"):
         elif "opt to" in lt:
             status = link_text.split(" - ")[-1].strip() if " - " in link_text else ""
 
-        # is_live only if we're on the live page AND no preview/result status
-        is_live = (page_type == "live") and (
-            status not in ["Preview", "Result", "Abandoned"]
-        )
+        # --- THE FIX: STRICTER EXCLUSION ---
+        # If the status contains any of these words, it is permanently banned from being 'Live'
+        excluded_phrases = ["preview", "result", "abandoned", "won by", "won", "drawn", "tied", "no result"]
+        is_live = (page_type == "live") and not any(x in status.lower() for x in excluded_phrases)
 
         if href not in match_map or len(teams) > len(match_map[href]["teams"]):
             match_map[href] = {
@@ -103,13 +96,12 @@ def _parse_matches(url, page_type="live"):
                 "is_psl": is_psl,
                 "href": href,
             }
-# Quick keyword list to prevent fetching scores for non-Pakistan matches
+
     pak_keywords = [
         "pakistan", "pak", "psl", "qalandars", "kings", "zalmi", 
         "gladiators", "united", "sultans", "kingsmen", "pindiz"
     ]
 
-    # Only fetch individual scores for Pakistan matches that might be live
     for href, match in match_map.items():
         if match["is_live"]:
             searchable = (match["teams"] + " " + match["series"] + " " + match["href"]).lower()
@@ -118,7 +110,7 @@ def _parse_matches(url, page_type="live"):
             if is_pak:
                 _enrich_with_score(match)
             else:
-                match["is_live"] = False  # Skip and turn off live flag for other countries
+                match["is_live"] = False  
 
     return list(match_map.values())
 
@@ -135,43 +127,56 @@ def _enrich_with_score(match):
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
 
+        # Nuke the navigation bars
+        for nav in soup.find_all("nav"):
+            nav.decompose()
+        for ticker in soup.find_all("div", class_=re.compile("cb-mat-mnu|cb-hm-mnu")):
+            ticker.decompose()
+
         text = soup.get_text(separator="\n", strip=True)
         lines = [l.strip() for l in text.split("\n") if l.strip()]
         
-        # THE MAGIC FIX: Only grab the top 40 lines. 
-        # This includes the scoreboard but completely cuts off the "Partnership" commentary!
-        header_lines = lines[:40]
-        joined = " ".join(header_lines)
+        # Join the top 150 lines to safely catch the score
+        joined = " ".join(lines[:150])
 
-        # Your original, working regex!
+        # --- THE ULTIMATE REGEX ---
+        # Handles hyphens, slashes, decimal overs, and missing wickets all at once!
+        # Matches: KRK 181/7 (20) | KRK 181-7 (20.0 Ovs) | QTG 20 (2)
         score_pattern = re.compile(
-            r"([A-Z]{2,5})\s+(\d+)\s*/\s*(\d+)\s*\(\s*([\d.]+)\s*\)"
+            r"\b(?!(?:SHIP|REQ|CRR|OVS|TOSS|MINS|RUNS|LAST)\b)([A-Z]{2,5})\b\s+(\d+)(?:\s*[/-]\s*(\d+))?\s*\(\s*([\d.]+)[^\)]*\)"
         )
         scores = score_pattern.findall(joined)
 
         if scores:
             parts = []
+            seen = set() # Add a set to track duplicates
             for team, runs, wkts, overs in scores:
-                parts.append(f"{team} {runs}/{wkts} ({overs} ov)")
+                score_str = f"{team} {runs}/{wkts} ({overs} ov)" if wkts else f"{team} {runs} ({overs} ov)"
+                if score_str not in seen:
+                    seen.add(score_str)
+                    parts.append(score_str)
             match["score"] = "  |  ".join(parts)
 
             crr = re.search(r"CRR\s*:?\s*([\d.]+)", joined)
             if crr:
                 match["score"] += f"  CRR: {crr.group(1)}"
         else:
-            score_pattern2 = re.compile(r"([A-Z]{2,5})\s+(\d+)\s*\(\s*([\d.]+)\s*\)")
+            score_pattern2 = re.compile(r"\b(?!(?:SHIP|REQ|CRR|OVS|TOSS|MINS|RUNS|LAST)\b)([A-Z]{2,5})\b\s+(\d+)\s*\(\s*([\d.]+)\s*\)")
             scores2 = score_pattern2.findall(joined)
             if scores2:
                 parts = []
+                seen = set() # Add a set here too
                 for team, runs, overs in scores2:
-                    parts.append(f"{team} {runs} ({overs} ov)")
+                    score_str = f"{team} {runs} ({overs} ov)"
+                    if score_str not in seen:
+                        seen.add(score_str)
+                        parts.append(score_str)
                 match["score"] = "  |  ".join(parts)
-
-        # Find status from the header lines
+        # Scan for status (Stumps, Drinks, etc.)
         status_found = False
-        for line in header_lines:
+        for line in lines[:150]:
             ll = line.lower()
-            if ("won by" in ll or "match drawn" in ll or "tied" in ll or "no result" in ll) and len(line) < 80:
+            if any(x in ll for x in ["won by", "match drawn", "tied", "no result"]) and len(line) < 80:
                 match["status"] = line.strip()
                 match["is_live"] = False
                 status_found = True
@@ -181,18 +186,23 @@ def _enrich_with_score(match):
                 status_found = True
                 break
 
-        # If no score found, match hasn't started
-        if not match.get("score"):
+        # --- THE FALLBACK LOGIC ---
+        if match.get("score"):
+            # If we have a score but no specific status (like "Drinks"), it is actively playing!
+            if not match.get("status"):
+                match["status"] = "In Progress"
+        else:
+            # If no score, it really hasn't started yet.
             match["is_live"] = False
-            if not status_found:
+            if not status_found and not match.get("status"):
                 match["status"] = "Scheduled"
 
     except Exception:
-        # THE FIX: If the HTTP request fails, force is_live to False so it doesn't create ghost matches!
         match["is_live"] = False
         match["score"] = ""
         if not match.get("status"):
              match["status"] = "Scheduled"
+
 
 def get_live_matches():
     return _parse_matches(LIVE_URL, page_type="live")
