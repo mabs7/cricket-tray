@@ -12,9 +12,12 @@ Smart refresh intervals:
 import sys
 import threading
 import time
+import webbrowser
 
 from scraper import get_all_matches
 from filter import get_match_state, get_display_text
+from version import CURRENT_VERSION, GITHUB_REPO
+from updater import check_for_updates
 
 # ── Refresh intervals ──────────────────────────────────────────────────────────
 INTERVAL_LIVE = 45
@@ -63,6 +66,19 @@ if sys.platform == "darwin":
             )
             self.menu = ["Show Score", None]
             self._start_refresh_thread()
+            threading.Thread(target=self._check_update_startup, daemon=True).start()
+
+        def _check_update_startup(self):
+            update_info = check_for_updates(CURRENT_VERSION, GITHUB_REPO)
+            if update_info.get("update_available"):
+                response = rumps.alert(
+                    title="Update Available",
+                    message=f"A new version ({update_info['latest_version']}) of PAK Cricket is available.\nWould you like to download it now?",
+                    ok="Download",
+                    cancel="Cancel",
+                )
+                if response == 1:
+                    webbrowser.open(update_info["release_url"])
 
         def _start_refresh_thread(self):
             def _run():
@@ -408,6 +424,24 @@ else:
         # Floating bar (owns main thread)
         bar = create_floating_bar()
         bar.after(2000, update_bar)
+
+        # Update check
+        def check_update_windows():
+            update_info = check_for_updates(CURRENT_VERSION, GITHUB_REPO)
+            if update_info.get("update_available"):
+                def show_update():
+                    from tkinter import messagebox
+                    response = messagebox.askyesno(
+                        "Update Available",
+                        f"A new version ({update_info['latest_version']}) of PAK Cricket is available.\nWould you like to download it now?",
+                        parent=bar
+                    )
+                    if response:
+                        webbrowser.open(update_info["release_url"])
+                bar.after(2000, show_update)
+
+        threading.Thread(target=check_update_windows, daemon=True).start()
+
         bar.mainloop()
 
 
