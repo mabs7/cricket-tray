@@ -26,6 +26,9 @@ jobs:
       - name: Generate icon
         run: python3 create_icon.py
 
+      - name: Test scraper and refresh state
+        run: python3 -m unittest discover -s tests -v
+
       - name: Build .app
         run: pyinstaller --onefile --windowed --icon=icon.icns --name PakCricket main.py
 
@@ -56,6 +59,9 @@ jobs:
       - name: Generate icon
         run: python create_icon.py
 
+      - name: Test scraper and refresh state
+        run: python -m unittest discover -s tests -v
+
       - name: Build .exe
         run: pyinstaller --onefile --windowed --icon=icon.ico --name PakCricket main.py
 
@@ -76,6 +82,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout release notes
+        uses: actions/checkout@v4
+
       - name: Download Mac artifact
         uses: actions/download-artifact@v4
         with:
@@ -92,4 +101,5 @@ jobs:
           files: |
             PakCricket-Mac.zip
             PakCricket-Windows.zip
-          generate_release_notes: true
+          body_path: release-notes.md
+          fail_on_unmatched_files: true

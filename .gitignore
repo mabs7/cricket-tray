@@ -7,7 +7,7 @@ dist/
 build/
 *.spec
 PakCricket.zip
-EOFicon.iconset/
+icon.iconset/
 icon.icns
 icon.iconset
 .venv/

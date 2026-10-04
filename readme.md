@@ -18,14 +18,17 @@ A lightweight cross-platform widget that shows live Pakistan cricket scores — 
 
 ## Features
 
-- 🔴 **Live match** → red icon, refreshes every **60 seconds**
+- 🔴 **Live match** → red indicator, refreshes every **45 seconds**
 - 🟠 **Match scheduled today** → orange icon, refreshes every **5 minutes**
 - ⚫ **No match** → grey icon, refreshes every **30 minutes**
 - **Floating bar** (Windows) — always visible score bar, drag anywhere on screen
 - **Menu bar** (macOS) — score shown as text in the top-right menu bar
-- Click/double-click → full match detail popup
+- Details button/double-click → resizable, scrollable match detail popup
+- Pin any relevant match to the bar; open its Cricbuzz page or refresh manually
+- Saved bar position, visibility, font size, and always-on-top preference
+- Failed updates keep the last successful scores and display their age
 - Filters: **Pakistan international + PSL matches only**
-- No API key needed — scrapes Cricbuzz directly
+- No API key needed — reads Cricbuzz's embedded match data with scoped HTML fallback
 - Portable on Windows — no installation required
 
 ---
@@ -41,6 +44,10 @@ A lightweight cross-platform widget that shows live Pakistan cricket scores — 
 |---|---|
 | Drag the bar | Move it anywhere on screen |
 | Double-click the bar | Opens full score popup |
+| Details button or Enter | Opens full score popup |
+| Right-click the bar | Refresh, open source, text size, always-on-top, hide, and quit |
+| Pin to bar in details | Select the match shown on the floating bar |
+| Escape in details | Closes the popup |
 | Tray icon → Show Score | Opens full score popup |
 | Tray icon → Hide/Show Bar | Toggle floating bar visibility |
 | Tray icon → Quit | Closes the widget |
@@ -62,8 +69,10 @@ A lightweight cross-platform widget that shows live Pakistan cricket scores — 
 | Action | Result |
 |---|---|
 | Look at menu bar | See live score as text |
-| Click the icon | Opens score popup |
-| Click "Show Score" | Full match details |
+| Click the icon | Opens match details in the dropdown |
+| Select a match | Changes the score shown in the menu bar |
+| Click "Refresh now" | Fetches scores immediately |
+| Click "Open on Cricbuzz" | Opens the selected match's source page |
 | Click "Quit" | Closes the widget |
 
 ### Auto-start with macOS (optional)
@@ -139,8 +148,8 @@ powershell Compress-Archive PakCricket.exe PakCricket-Windows.zip
 
 ## Troubleshooting
 
-- **No scores showing?** There may be no Pakistan match today — this is expected behaviour.
-- **Scores look wrong?** Cricbuzz occasionally updates their HTML. Open an issue and it'll be fixed quickly.
+- **No scores showing?** Check the refresh status. No fixtures and failed updates are shown separately.
+- **Updates delayed?** The last successful scores remain visible while the app retries every minute. Cricbuzz may be unavailable or its data format may have changed.
 - **Floating bar not appearing?** Check your system tray (bottom-right) — use "Hide/Show Bar" to toggle it.
 - **Mac permissions issue?** Go to System Settings → Privacy & Security and allow the app.
 - **Scores delayed?** Normal — data is scraped from Cricbuzz, not a real-time API.
@@ -149,7 +158,11 @@ powershell Compress-Archive PakCricket.exe PakCricket-Windows.zip
 
 ## Contributing
 
-Pull requests welcome! If Cricbuzz updates their HTML and scores break, the fix is usually a one-line class name change in `scraper.py`.
+Pull requests welcome! The parser first decodes embedded JSON and Next.js flight chunks, then falls back to HTML scoped to individual match IDs. JSON-LD supplies fixture dates when available. It validates wickets and overs and reports unrecognized pages as refresh failures.
+
+Run the offline regression suite with `python -m unittest discover -s tests -v`. Run `python test_scraper.py` for a live network diagnostic. On Windows, `python tests/ui_smoke.py` checks temporary Tk windows and controls without starting the tray or fetching scores.
+
+Upcoming, live, and recent pages are fetched concurrently. A failed refresh preserves the previous complete snapshot; cached scores are kept in memory only. Preferences are stored in `%APPDATA%/PakCricket/settings.json` on Windows. Page formats can still change; fallback parsing is best effort and does not bypass access restrictions.
 
 ---
 

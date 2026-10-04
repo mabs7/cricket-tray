@@ -1,4 +1,9 @@
 import requests
+import re
+
+def version_tuple(value):
+    found = re.fullmatch(r"v?(\d+)\.(\d+)(?:\.(\d+))?", value)
+    return tuple(int(n or 0) for n in found.groups()) if found else None
 
 def check_for_updates(current_version, github_repo):
     """
@@ -19,11 +24,10 @@ def check_for_updates(current_version, github_repo):
         latest_version = data.get("tag_name", "")
         release_url = data.get("html_url", "")
         
-        # Simple string comparison for version tags assuming format like 'vX.Y.Z'
-        if latest_version and latest_version != current_version:
-            # Check if latest version is actually greater (simple check)
-            # In Python, 'v2.6.2' > 'v2.6.1' works lexicographically for well-formed semver
-            if latest_version > current_version:
+        # Compare numeric release components; prereleases are not upgrade prompts.
+        latest, current = version_tuple(latest_version), version_tuple(current_version)
+        if latest and current:
+            if latest > current:
                 return {
                     "update_available": True,
                     "latest_version": latest_version,

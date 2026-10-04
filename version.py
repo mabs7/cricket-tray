@@ -1,2 +1,2 @@
-CURRENT_VERSION = "v2.6.2"
+CURRENT_VERSION = "v2.7.0"
 GITHUB_REPO = "mabs7/cricket-tray"

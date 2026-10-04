@@ -5,9 +5,9 @@ lxml==5.2.1
 
 # macOS only
 # Install with: pip install rumps
-rumps==0.4.0
+rumps==0.4.0; sys_platform == "darwin"
 
 # Windows only
 # Install with: pip install pystray Pillow
-pystray==0.19.5
+pystray==0.19.5; sys_platform != "darwin"
 Pillow==10.3.0

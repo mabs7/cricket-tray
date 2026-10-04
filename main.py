@@ -1,450 +1,349 @@
-"""
-main.py
-Entry point for the Pakistan Cricket Live Score Tray Widget.
-Cross-platform: uses rumps on macOS, pystray on Windows.
-
-Smart refresh intervals:
-  - Live match    → every 60 seconds
-  - Match today   → every 5 minutes (300s)
-  - No match      → every 30 minutes (1800s)
-"""
-
+"""PAK Cricket desktop UI. Network work runs outside the UI thread."""
+import queue
 import sys
 import threading
-import time
 import webbrowser
-
-from scraper import get_all_matches
-from filter import get_match_state, get_display_text
-from version import CURRENT_VERSION, GITHUB_REPO
+from scraper import match_url, parse_date
+from scores import ScoreService, freshness
+from settings import load_settings, save_settings
 from updater import check_for_updates
+from version import CURRENT_VERSION, GITHUB_REPO
 
-# ── Refresh intervals ──────────────────────────────────────────────────────────
-INTERVAL_LIVE = 45
-INTERVAL_TODAY = 300
-INTERVAL_NONE = 1800
+LABELS = {"live": "LIVE", "today": "TODAY", "scheduled": "SCHEDULED", "completed": "COMPLETED", "none": "NO FIXTURES", "unknown": "STATUS UNKNOWN"}
+COLORS = {"live": "#ef6262", "today": "#f0b95c", "scheduled": "#f0b95c", "completed": "#92a3b8", "none": "#92a3b8", "unknown": "#92a3b8"}
+BG, CARD, FG, MUTED, GREEN = "#121a24", "#1d2938", "#eef3f8", "#a6b5c7", "#64d4a4"
 
-# ── Shared state ───────────────────────────────────────────────────────────────
-current_matches = []
-current_state = "none"
-current_text = "🏏 Fetching..."
+def chosen_match(snapshot, selected=None):
+    return next((m for m in snapshot["matches"] if m["id"] == selected), next(iter(snapshot["matches"]), None))
 
+def compact_text(match):
+    if not match:
+        return "No Pakistan or PSL fixtures"
+    rows = match.get("scores", [])
+    if rows:
+        return "  ·  ".join(f"{r['team']} {r['runs']}" + (f"/{r['wickets']}" if r['wickets'] is not None else "") + (f" ({r['overs']})" if r['overs'] else "") for r in rows)
+    start = parse_date(match.get("start_time"))
+    return match["teams"] + (f" · {start.astimezone():%d %b %H:%M}" if start else "")
 
-def fetch_scores():
-    """Fetch latest scores and update globals. Returns interval for next fetch."""
-    global current_matches, current_state, current_text
+def start_label(match):
+    start = parse_date(match.get("start_time"))
+    prefix = "Played" if match.get("state") == "completed" else "Starts"
+    return f"{prefix} {start.astimezone():%a %d %b, %H:%M %Z}" if start else "Start time unavailable"
 
-    all_data = get_all_matches()
-    state, matches = get_match_state(all_data)
-
-    current_state = state
-    current_matches = matches
-
-    if matches:
-        current_text = get_display_text(matches[0])
-        if len(matches) > 1:
-            current_text += f"  (+{len(matches)-1} more)"
-    else:
-        current_text = "🏏 No PAK match"
-
-    intervals = {"live": INTERVAL_LIVE, "today": INTERVAL_TODAY, "none": INTERVAL_NONE}
-    return intervals[state]
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  macOS — rumps
-# ══════════════════════════════════════════════════════════════════════════════
 if sys.platform == "darwin":
     import rumps
 
     class CricketApp(rumps.App):
         def __init__(self):
-            super().__init__(
-                name="PAK Cricket",
-                title="🏏",
-                quit_button="Quit",
-            )
-            self.menu = ["Show Score", None]
-            self._start_refresh_thread()
-            threading.Thread(target=self._check_update_startup, daemon=True).start()
+            super().__init__("PAK Cricket", title="Fetching…", quit_button=None)
+            self.service, self.selected, self.update = ScoreService(), None, None
+            self.updates = queue.Queue()
+            self.menu = [rumps.MenuItem("Fetching scores…")]
+            self.service.start()
+            self.timer = rumps.Timer(self.tick, 2)
+            self.timer.start()
+            threading.Thread(target=self.check_update, daemon=True).start()
 
-        def _check_update_startup(self):
-            update_info = check_for_updates(CURRENT_VERSION, GITHUB_REPO)
-            if update_info.get("update_available"):
-                response = rumps.alert(
-                    title="Update Available",
-                    message=f"A new version ({update_info['latest_version']}) of PAK Cricket is available.\nWould you like to download it now?",
-                    ok="Download",
-                    cancel="Cancel",
-                )
-                if response == 1:
-                    webbrowser.open(update_info["release_url"])
+        def check_update(self):
+            self.updates.put(check_for_updates(CURRENT_VERSION, GITHUB_REPO))
 
-        def _start_refresh_thread(self):
-            def _run():
-                while True:
-                    interval = fetch_scores()
-                    self._update_ui()
-                    time.sleep(interval)
+        def tick(self, _):
+            if not self.updates.empty():
+                self.update = self.updates.get()
+            snapshot = self.service.snapshot()
+            match = chosen_match(snapshot, self.selected)
+            state = match["state"] if match else snapshot["state"]
+            self.title = ("⚠ " if snapshot["errors"] else "") + LABELS[state] + " · " + (compact_text(match) if snapshot["updated_at"] else freshness(snapshot))
+            if len(self.title) > 65:
+                self.title = self.title[:62] + "…"
+            items = [rumps.MenuItem(LABELS[state]), rumps.MenuItem(freshness(snapshot)), None]
+            for m in snapshot["matches"]:
+                item = rumps.MenuItem(m["teams"], callback=lambda _, ident=m["id"]: self.select(ident))
+                item.state = bool(match and m["id"] == match["id"])
+                items.append(item)
+                for row in m.get("scores", []):
+                    items.append(rumps.MenuItem(f"  {row['team']} {row['runs']}" + (f"/{row['wickets']}" if row['wickets'] is not None else "") + f"  {row['overs']} overs"))
+                items.append(rumps.MenuItem(m.get("status") or start_label(m)))
+                if m.get("series"):
+                    items.append(rumps.MenuItem(m["series"]))
+            items += [None, rumps.MenuItem("Refresh now", callback=lambda _: self.service.request_refresh()),
+                      rumps.MenuItem("Open on Cricbuzz", callback=lambda _: self.open_source()), None]
+            if self.update and self.update.get("update_available"):
+                items.append(rumps.MenuItem(f"Download {self.update['latest_version']}", callback=lambda _: webbrowser.open(self.update["release_url"])))
+            items.append(rumps.MenuItem("Quit", callback=self.quit))
+            self.menu.clear()
+            self.menu.update(items)
 
-            threading.Thread(target=_run, daemon=True).start()
+        def select(self, ident):
+            self.selected = ident
+            self.tick(None)
 
-        def _update_ui(self):
-            state_emoji = {"live": "🔴", "today": "🟠", "none": "⚫"}
-            emoji = state_emoji.get(current_state, "🏏")
-            self.title = f"{emoji} {current_text}"
+        def open_source(self):
+            match = chosen_match(self.service.snapshot(), self.selected)
+            if match and match_url(match):
+                webbrowser.open(match_url(match))
 
-        @rumps.clicked("Show Score")
-        def show_score(self, sender):
-            if not current_matches:
-                rumps.alert(
-                    title="PAK Cricket",
-                    message="No Pakistan match right now.",
-                    ok="Close",
-                )
-                return
-
-            lines = []
-            state_label = {
-                "live": "🔴 LIVE",
-                "today": "🟠 Scheduled Today",
-                "none": "⚫ Recent",
-            }
-            lines.append(state_label.get(current_state, ""))
-            lines.append("")
-            for match in current_matches:
-                lines.append(f"▶ {match.get('teams', '')}")
-                if match.get("score"):
-                    lines.append(f"   Score: {match['score']}")
-                if match.get("status"):
-                    lines.append(f"   Status: {match['status']}")
-                if match.get("series"):
-                    lines.append(f"   Series: {match['series']}")
-                lines.append("")
-
-            rumps.alert(
-                title="🏏 Pakistan Cricket",
-                message="\n".join(lines).strip(),
-                ok="Close",
-            )
+        def quit(self, _):
+            self.service.stop()
+            rumps.quit_application()
 
     def main():
         CricketApp().run()
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  Windows — pystray + tkinter floating bar
-# ══════════════════════════════════════════════════════════════════════════════
 else:
     import tkinter as tk
+    from tkinter import ttk
     import pystray
     from PIL import Image, ImageDraw
 
-    tray_icon = None
-    float_bar = None  # the always-on-top floating window
-    bar_label = None  # label inside the bar
-    bar_hidden = False  # toggle visibility
-    popup_open = False  # prevent multiple popups
+    class CricketApp:
+        def __init__(self, service=None, preferences=None, tray=True):
+            self.service = service or ScoreService()
+            self.preferences = preferences if preferences is not None else load_settings()
+            self.commands = queue.Queue()
+            self.popup = None
+            self.cards_revision = None
+            self.card_selection = None
+            self.tray_icon = None
+            self.update = None
+            self.root = tk.Tk()
+            self.root.overrideredirect(True)
+            self.root.attributes("-topmost", self.preferences["topmost"])
+            self.root.configure(bg=BG)
+            width = min(640, self.root.winfo_screenwidth() - 20)
+            pos = self.preferences["position"] or [self.root.winfo_screenwidth() - width - 10, 10]
+            # Clamp restored coordinates to the current primary screen.
+            x = min(max(0, pos[0]), self.root.winfo_screenwidth() - width)
+            y = min(max(0, pos[1]), self.root.winfo_screenheight() - 44)
+            self.root.geometry(f"{width}x44+{x}+{y}")
+            self.status = tk.Label(self.root, text="●", fg=MUTED, bg=BG, padx=8)
+            self.status.pack(side="left")
+            self.label = tk.Label(self.root, text="Fetching scores…", fg=FG, bg=BG,
+                                  font=("Segoe UI", self.preferences["text_size"], "bold"), anchor="w")
+            self.label.pack(side="left", fill="both", expand=True)
+            self.details = tk.Button(self.root, text="Details ▾", command=self.show_details, bg=CARD, fg=FG,
+                                     relief="flat", padx=10, takefocus=True)
+            self.details.pack(side="right", padx=6, pady=7)
+            self.context = tk.Menu(self.root, tearoff=False)
+            for name, command in [("Details", self.show_details), ("Refresh now", self.service.request_refresh),
+                                  ("Open on Cricbuzz", self.open_source), ("Hide bar", self.toggle_bar),
+                                  ("Always on top", self.toggle_topmost), ("Increase text size", lambda: self.resize_text(1)),
+                                  ("Decrease text size", lambda: self.resize_text(-1)), ("Quit", self.quit)]:
+                self.context.add_command(label=name, command=command)
+            for widget in (self.root, self.status, self.label):
+                widget.bind("<ButtonPress-1>", self.drag_start)
+                widget.bind("<B1-Motion>", self.drag_move)
+                widget.bind("<ButtonRelease-1>", self.drag_end)
+                widget.bind("<Double-Button-1>", lambda _: self.show_details())
+                widget.bind("<Button-3>", lambda e: self.context.tk_popup(e.x_root, e.y_root))
+            self.root.bind("<Return>", lambda _: self.show_details())
+            if tray:
+                self.create_tray()
+            # A hidden bar remains accessible through the tray; without it show the bar.
+            if self.preferences["hidden"] and self.tray_icon:
+                self.root.withdraw()
+            self.service.start()
+            self.root.after(100, self.tick)
+            threading.Thread(target=self.check_update, daemon=True).start()
 
-    # ── Icon drawing ──────────────────────────────────────────────────────────
-    def create_icon_image(color="#00A550"):
-        img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(img)
-        draw.ellipse([2, 2, 30, 30], fill=color, outline="white", width=2)
-        draw.arc([6, 6, 26, 26], start=30, end=150, fill="white", width=2)
-        draw.arc([6, 6, 26, 26], start=210, end=330, fill="white", width=2)
-        return img
+        def save(self):
+            save_settings(self.preferences)
 
-    def get_icon_color(state):
-        return {"live": "#CC0000", "today": "#FFA500", "none": "#555555"}.get(
-            state, "#555555"
-        )
+        def create_tray(self):
+            def action(name):
+                return lambda icon, item: self.commands.put(name)
+            self.tray_icon = pystray.Icon("PAK Cricket", self.icon_image(MUTED), "PAK Cricket",
+                pystray.Menu(pystray.MenuItem("Show Score", action("details"), default=True),
+                             pystray.MenuItem("Refresh now", action("refresh")),
+                             pystray.MenuItem("Hide/Show Bar", action("toggle")),
+                             pystray.MenuItem("Always on top", action("topmost"), checked=lambda _: self.preferences["topmost"]),
+                             pystray.MenuItem("Quit", action("quit"))))
+            threading.Thread(target=self.tray_icon.run, daemon=True).start()
 
-    def get_bar_color(state):
-        return {"live": "#8B0000", "today": "#7A4000", "none": "#1a1a2e"}.get(
-            state, "#1a1a2e"
-        )
+        @staticmethod
+        def icon_image(color):
+            image = Image.new("RGBA", (32, 32))
+            draw = ImageDraw.Draw(image)
+            draw.ellipse((3, 3, 29, 29), fill=color)
+            draw.arc((7, 5, 25, 27), 70, 250, fill="white", width=2)
+            return image
 
-    # ── Floating bar ──────────────────────────────────────────────────────────
-    def create_floating_bar():
-        global float_bar, bar_label
+        def check_update(self):
+            self.commands.put(("update", check_for_updates(CURRENT_VERSION, GITHUB_REPO)))
 
-        float_bar = tk.Tk()
-        float_bar.overrideredirect(True)  # no title bar / borders
-        float_bar.attributes("-topmost", True)  # always on top
-        float_bar.attributes("-alpha", 0.92)  # slight transparency
-        float_bar.configure(bg="#1a1a2e")
+        def drag_start(self, event):
+            self.drag_origin = (event.x_root, event.y_root, self.root.winfo_x(), self.root.winfo_y())
 
-        # Position: top-right corner
-        sw = float_bar.winfo_screenwidth()
-        float_bar.geometry(f"480x32+{sw - 490}+10")
+        def drag_move(self, event):
+            a, b, x, y = self.drag_origin
+            self.root.geometry(f"+{max(0, x + event.x_root - a)}+{max(0, y + event.y_root - b)}")
 
-        # Score label
-        bar_label = tk.Label(
-            float_bar,
-            text="🏏 Fetching...",
-            font=("Segoe UI", 10, "bold"),
-            fg="#ffffff",
-            bg="#1a1a2e",
-            padx=10,
-            pady=4,
-            anchor="w",
-        )
-        bar_label.pack(fill="both", expand=True)
+        def drag_end(self, _):
+            self.preferences["position"] = [self.root.winfo_x(), self.root.winfo_y()]
+            self.save()
 
-        # Drag to move
-        float_bar.bind("<ButtonPress-1>", _drag_start)
-        float_bar.bind("<B1-Motion>", _drag_move)
-        bar_label.bind("<ButtonPress-1>", _drag_start)
-        bar_label.bind("<B1-Motion>", _drag_move)
+        def toggle_bar(self):
+            self.preferences["hidden"] = not self.preferences["hidden"]
+            self.root.withdraw() if self.preferences["hidden"] else self.root.deiconify()
+            self.save()
 
-        # Double-click to show detail popup
-        bar_label.bind("<Double-Button-1>", lambda e: show_detail_popup())
-        float_bar.bind("<Double-Button-1>", lambda e: show_detail_popup())
+        def toggle_topmost(self):
+            self.preferences["topmost"] = not self.preferences["topmost"]
+            self.root.attributes("-topmost", self.preferences["topmost"])
+            self.save()
 
-        return float_bar
+        def resize_text(self, step):
+            self.preferences["text_size"] = min(16, max(9, self.preferences["text_size"] + step))
+            self.label.configure(font=("Segoe UI", self.preferences["text_size"], "bold"))
+            self.save()
 
-    # Drag helpers
-    _drag_x = _drag_y = 0
+        def select(self, ident):
+            self.preferences["selected"] = None if self.preferences["selected"] == ident else ident
+            self.save()
+            self.cards_revision = None
 
-    def _drag_start(event):
-        global _drag_x, _drag_y
-        _drag_x, _drag_y = event.x, event.y
+        def open_source(self, match=None):
+            match = match or chosen_match(self.service.snapshot(), self.preferences["selected"])
+            if match and match_url(match):
+                webbrowser.open(match_url(match))
 
-    def _drag_move(event):
-        x = float_bar.winfo_x() + event.x - _drag_x
-        y = float_bar.winfo_y() + event.y - _drag_y
-        float_bar.geometry(f"+{x}+{y}")
+        def show_details(self):
+            if self.popup and self.popup.winfo_exists():
+                self.popup.lift()
+                return
+            self.popup = tk.Toplevel(self.root)
+            self.popup.title("PAK Cricket · Match details")
+            self.popup.configure(bg=BG)
+            self.popup.geometry("560x520")
+            self.popup.minsize(420, 320)
+            self.popup.protocol("WM_DELETE_WINDOW", self.close_details)
+            self.popup.bind("<Escape>", lambda _: self.close_details())
+            tk.Label(self.popup, text="Pakistan & PSL", bg=BG, fg=FG, font=("Segoe UI", 17, "bold"), anchor="w").pack(fill="x", padx=20, pady=(18, 4))
+            self.fresh_label = tk.Label(self.popup, bg=BG, fg=MUTED, anchor="w")
+            self.fresh_label.pack(fill="x", padx=20, pady=(0, 12))
+            body = tk.Frame(self.popup, bg=BG)
+            body.pack(fill="both", expand=True)
+            self.canvas = tk.Canvas(body, bg=BG, highlightthickness=0)
+            scrollbar = ttk.Scrollbar(body, orient="vertical", command=self.canvas.yview)
+            scrollbar.pack(side="right", fill="y")
+            self.canvas.pack(side="left", fill="both", expand=True)
+            self.canvas.configure(yscrollcommand=scrollbar.set)
+            self.cards = tk.Frame(self.canvas, bg=BG)
+            self.cards_window = self.canvas.create_window((0, 0), window=self.cards, anchor="nw")
+            self.cards.bind("<Configure>", lambda _: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+            self.canvas.bind("<Configure>", self.layout_cards)
+            self.popup.bind("<MouseWheel>", lambda e: self.canvas.yview_scroll(-int(e.delta / 120), "units"))
+            footer = tk.Frame(self.popup, bg=BG)
+            footer.pack(fill="x", padx=20, pady=14)
+            tk.Button(footer, text="Refresh now", command=self.service.request_refresh).pack(side="left")
+            self.update_button = tk.Button(footer, text="", command=self.open_update)
+            tk.Button(footer, text="Close", command=self.close_details).pack(side="right")
+            self.cards_revision = None
+            self.render_details(self.service.snapshot())
 
-    def update_bar():
-        """Refresh the floating bar text and colour. Always reschedules itself."""
-        try:
-            if bar_label and float_bar and not bar_hidden:
-                # Show score if available, otherwise show teams
-                display = current_text
-                bar_label.config(text=display, bg=get_bar_color(current_state))
-                float_bar.configure(bg=get_bar_color(current_state))
-        except Exception:
-            pass  # never let a crash kill the loop
-        finally:
-            float_bar.after(2000, update_bar)  # always reschedule
+        def layout_cards(self, event):
+            self.canvas.itemconfigure(self.cards_window, width=event.width)
+            for label in self.wrapped_labels:
+                label.configure(wraplength=max(250, event.width - 60))
 
-    # ── Detail popup ──────────────────────────────────────────────────────────
-    def _restore_bar():
-        """Safely restore floating bar after popup closes."""
-        try:
-            float_bar.lift()
-            float_bar.attributes("-topmost", True)
-            float_bar.deiconify()
-        except Exception:
-            pass
+        def close_details(self):
+            if self.popup:
+                self.popup.destroy()
+                self.popup = None
 
-    def show_detail_popup():
-        global popup_open
-        if popup_open:
-            return  # block if already open
+        def render_details(self, snapshot):
+            if not self.popup:
+                return
+            self.fresh_label.configure(text=freshness(snapshot), fg=COLORS["scheduled"] if snapshot["errors"] else MUTED)
+            if self.update and self.update.get("update_available"):
+                self.update_button.configure(text=f"Download {self.update['latest_version']}")
+                self.update_button.pack(side="left", padx=10)
+            if self.cards_revision == snapshot["revision"]:
+                return
+            self.cards_revision = snapshot["revision"]
+            position = self.canvas.yview()[0]
+            for child in self.cards.winfo_children():
+                child.destroy()
+            self.wrapped_labels = []
+            if not snapshot["matches"]:
+                message = "Unable to fetch scores. Retrying automatically." if snapshot["errors"] else "Fetching scores…" if snapshot["updated_at"] is None else "No Pakistan or PSL fixtures available."
+                tk.Label(self.cards, text=message, bg=BG, fg=MUTED, pady=30).pack()
+            for match in snapshot["matches"]:
+                card = tk.Frame(self.cards, bg=CARD, padx=14, pady=12)
+                card.pack(fill="x", padx=20, pady=(0, 12))
+                def label(text, color=FG, size=10, bold=False):
+                    item = tk.Label(card, text=text, bg=CARD, fg=color, anchor="w", justify="left",
+                                    font=("Segoe UI", size, "bold" if bold else "normal"), wraplength=460)
+                    item.pack(fill="x", pady=3)
+                    self.wrapped_labels.append(item)
+                label(LABELS[match["state"]], COLORS[match["state"]], 9, True)
+                label(match["teams"], size=13, bold=True)
+                label(match.get("series", ""), MUTED, 9)
+                for row in match.get("scores", []):
+                    score = str(row["runs"]) + (f"/{row['wickets']}" if row['wickets'] is not None else "")
+                    label(f"{row['team']}     {score}     {row['overs']} overs", GREEN, 14, True)
+                if not match.get("scores"):
+                    label(start_label(match), MUTED)
+                label(match.get("status") or "Status unavailable", MUTED)
+                controls = tk.Frame(card, bg=CARD)
+                controls.pack(fill="x", pady=(8, 0))
+                pinned = self.preferences["selected"] == match["id"]
+                tk.Button(controls, text="Unpin from bar" if pinned else "Pin to bar", command=lambda ident=match["id"]: self.select(ident)).pack(side="left")
+                tk.Button(controls, text="Open on Cricbuzz", command=lambda m=match: self.open_source(m)).pack(side="right")
+            self.canvas.yview_moveto(position)
 
-        popup_open = True
-        popup = tk.Toplevel()
-        popup.title("PAK Cricket")
-        popup.geometry("420x340")
-        popup.configure(bg="#1a1a2e")
-        popup.resizable(False, False)
-        popup.attributes("-topmost", True)
+        def open_update(self):
+            if self.update and self.update.get("release_url"):
+                webbrowser.open(self.update["release_url"])
 
-        _restore_bar()
+        def tick(self):
+            while not self.commands.empty():
+                command = self.commands.get()
+                if isinstance(command, tuple):
+                    self.update = command[1]
+                elif command == "quit":
+                    self.quit()
+                    return
+                else:
+                    {"details": self.show_details, "refresh": self.service.request_refresh,
+                     "toggle": self.toggle_bar, "topmost": self.toggle_topmost}[command]()
+            snapshot = self.service.snapshot()
+            match = chosen_match(snapshot, self.preferences["selected"])
+            state = match["state"] if match else snapshot["state"]
+            delayed = bool(snapshot["errors"])
+            status = "DELAYED" if delayed else "FETCHING" if snapshot["updated_at"] is None else LABELS[state]
+            self.status.configure(text=f"● {status}", fg=COLORS["scheduled"] if delayed else COLORS[state])
+            text = compact_text(match) if snapshot["updated_at"] else freshness(snapshot)
+            # Fit the available label width; full text is available in details/tray.
+            from tkinter import font
+            available = max(80, self.label.winfo_width() - 8)
+            face = font.Font(font=self.label.cget("font"))
+            shown = text
+            while len(shown) > 1 and face.measure(shown + ("…" if shown != text else "")) > available:
+                shown = shown[:-1]
+            self.label.configure(text=shown + ("…" if shown != text else ""))
+            if self.tray_icon:
+                title = f"{status} · {text} · {freshness(snapshot)}"[:127]
+                if self.tray_icon.title != title:
+                    self.tray_icon.title = title
+                color = COLORS["scheduled"] if delayed else COLORS[state]
+                if getattr(self, "tray_color", None) != color:
+                    self.tray_icon.icon = self.icon_image(color)
+                    self.tray_color = color
+            self.render_details(snapshot)
+            self.root.after(1000, self.tick)
 
-        def on_popup_close():
-            global popup_open
-            popup_open = False
-            popup.destroy()
-            float_bar.after(100, _restore_bar)
+        def quit(self):
+            self.service.stop()
+            if self.tray_icon:
+                self.tray_icon.stop()
+            self.root.destroy()
 
-        popup.protocol("WM_DELETE_WINDOW", on_popup_close)
+        def run(self):
+            self.root.mainloop()
 
-        tk.Label(
-            popup,
-            text="🏏 Pakistan Cricket",
-            font=("Segoe UI", 14, "bold"),
-            fg="#00A550",
-            bg="#1a1a2e",
-            pady=10,
-        ).pack(fill="x")
-        tk.Frame(popup, bg="#00A550", height=2).pack(fill="x", padx=10)
-
-        frame = tk.Frame(popup, bg="#1a1a2e")
-        frame.pack(fill="both", expand=True, padx=15, pady=10)
-
-        # Dynamic labels that auto-update
-        score_labels = []  # list of (teams_var, score_var, status_var)
-
-        if not current_matches:
-            no_match_lbl = tk.Label(
-                frame,
-                text="No Pakistan match right now.",
-                font=("Segoe UI", 11),
-                fg="#aaaaaa",
-                bg="#1a1a2e",
-            )
-            no_match_lbl.pack(pady=20)
-        else:
-            for match in current_matches:
-                card = tk.Frame(frame, bg="#16213e")
-                card.pack(fill="x", pady=5, ipady=8, ipadx=8)
-
-                teams_var = tk.StringVar(value=match.get("teams", ""))
-                score_var = tk.StringVar(value=match.get("score", "No score yet"))
-                status_var = tk.StringVar(value=match.get("status", ""))
-
-                tk.Label(
-                    card,
-                    textvariable=teams_var,
-                    font=("Segoe UI", 12, "bold"),
-                    fg="#ffffff",
-                    bg="#16213e",
-                    anchor="w",
-                ).pack(fill="x", padx=8)
-                tk.Label(
-                    card,
-                    textvariable=score_var,
-                    font=("Segoe UI", 11),
-                    fg="#FFD700",
-                    bg="#16213e",
-                    anchor="w",
-                ).pack(fill="x", padx=8)
-                tk.Label(
-                    card,
-                    textvariable=status_var,
-                    font=("Segoe UI", 10),
-                    fg="#CC0000",
-                    bg="#16213e",
-                    anchor="w",
-                ).pack(fill="x", padx=8)
-
-                score_labels.append((teams_var, score_var, status_var))
-
-        def refresh_popup():
-            """Update popup labels with latest score data every 5 seconds."""
-            try:
-                for i, (tv, sv, stv) in enumerate(score_labels):
-                    if i < len(current_matches):
-                        m = current_matches[i]
-                        tv.set(m.get("teams", ""))
-                        sv.set(m.get("score", "No score yet"))
-                        stv.set(m.get("status", ""))
-                if popup.winfo_exists():
-                    popup.after(5000, refresh_popup)
-            except Exception:
-                pass
-
-        popup.after(5000, refresh_popup)  # start auto-refresh
-
-        state_map = {
-            "live": "🔴 LIVE",
-            "today": "🟠 Scheduled",
-            "none": "⚫ No live match",
-        }
-        tk.Label(
-            popup,
-            text=state_map.get(current_state, ""),
-            font=("Segoe UI", 9),
-            fg="#888888",
-            bg="#1a1a2e",
-            pady=6,
-        ).pack()
-        tk.Button(
-            popup,
-            text="Close",
-            command=on_popup_close,
-            bg="#00A550",
-            fg="white",
-            font=("Segoe UI", 10),
-            relief="flat",
-            padx=20,
-        ).pack(pady=(0, 10))
-        # Restore bar if user clicks away from popup without using Close button
-        popup.bind("<FocusOut>", lambda e: _restore_bar())
-
-    # ── Tray menu actions ─────────────────────────────────────────────────────
-    def toggle_bar(icon, item):
-        """Thread-safe toggle — schedule on tkinter main thread."""
-
-        def _do_toggle():
-            global bar_hidden
-            bar_hidden = not bar_hidden
-            if bar_hidden:
-                float_bar.withdraw()
-            else:
-                float_bar.deiconify()
-                float_bar.attributes("-topmost", True)  # re-assert topmost on show
-
-        float_bar.after(0, _do_toggle)
-
-    def show_popup_from_tray(icon, item):
-        """Thread-safe popup — schedule on tkinter main thread."""
-        float_bar.after(0, show_detail_popup)
-
-    def quit_app(icon, item):
-        float_bar.after(0, float_bar.destroy)
-        icon.stop()
-
-    # ── Refresh loop ──────────────────────────────────────────────────────────
-    def refresh_loop():
-        while True:
-            interval = fetch_scores()
-            if tray_icon:
-                tray_icon.icon = create_icon_image(get_icon_color(current_state))
-                tray_icon.title = current_text
-            time.sleep(interval)
-
-    # ── Main ──────────────────────────────────────────────────────────────────
     def main():
-        global tray_icon
+        CricketApp().run()
 
-        fetch_scores()
-
-        # Tray icon
-        tray_icon = pystray.Icon(
-            name="PAK Cricket",
-            icon=create_icon_image(get_icon_color(current_state)),
-            title=current_text,
-            menu=pystray.Menu(
-                pystray.MenuItem("Show Score", show_popup_from_tray, default=True),
-                pystray.MenuItem("Hide/Show Bar", toggle_bar),
-                pystray.MenuItem("Quit", quit_app),
-            ),
-        )
-
-        # Refresh thread
-        threading.Thread(target=refresh_loop, daemon=True).start()
-
-        # Tray runs in its own thread so tkinter can own the main thread
-        threading.Thread(target=tray_icon.run, daemon=True).start()
-
-        # Floating bar (owns main thread)
-        bar = create_floating_bar()
-        bar.after(2000, update_bar)
-
-        # Update check
-        def check_update_windows():
-            update_info = check_for_updates(CURRENT_VERSION, GITHUB_REPO)
-            if update_info.get("update_available"):
-                def show_update():
-                    from tkinter import messagebox
-                    response = messagebox.askyesno(
-                        "Update Available",
-                        f"A new version ({update_info['latest_version']}) of PAK Cricket is available.\nWould you like to download it now?",
-                        parent=bar
-                    )
-                    if response:
-                        webbrowser.open(update_info["release_url"])
-                bar.after(2000, show_update)
-
-        threading.Thread(target=check_update_windows, daemon=True).start()
-
-        bar.mainloop()
-
-
-# ══════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
     main()
