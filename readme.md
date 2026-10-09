@@ -26,6 +26,9 @@ A lightweight cross-platform widget that shows live Pakistan cricket scores — 
 - Details button/double-click → resizable, scrollable match detail popup
 - Pin any relevant match to the bar; open its Cricbuzz page or refresh manually
 - Saved bar position, visibility, font size, and always-on-top preference
+- Windows bar restores its visibility and always-on-top state without taking keyboard focus; explicit Hide and Quit are respected
+- Automatic update checks at startup and every six hours, with a visible update button and one notification per version
+- Portable Windows updates download, verify, replace, and restart the app after you click Update; settings and the previous executable are preserved
 - Failed updates keep the last successful scores and display their age
 - Filters: **Pakistan international + PSL matches only**
 - No API key needed — reads Cricbuzz's embedded match data with scoped HTML fallback
@@ -48,6 +51,8 @@ A lightweight cross-platform widget that shows live Pakistan cricket scores — 
 | Right-click the bar | Refresh, open source, text size, always-on-top, hide, and quit |
 | Pin to bar in details | Select the match shown on the floating bar |
 | Escape in details | Closes the popup |
+| Update available button | Downloads and verifies the new Windows version, then restarts after confirmation |
+| Tray → Check for updates | Checks for a release immediately |
 | Tray icon → Show Score | Opens full score popup |
 | Tray icon → Hide/Show Bar | Toggle floating bar visibility |
 | Tray icon → Quit | Closes the widget |
@@ -56,6 +61,11 @@ A lightweight cross-platform widget that shows live Pakistan cricket scores — 
 1. Right-click `PakCricket.exe` → **Create Shortcut**
 2. Press `Win + R` → type `shell:startup` → press Enter
 3. Move the shortcut into that folder
+
+### Portable updates
+The app remains portable; no installer or administrator access is needed in a writable folder. Install the first version supporting in-app updates manually. Future Windows updates can be applied from the score bar or tray menu. The app verifies the release ZIP against GitHub's SHA-256 digest, retains a `PakCricket.previous-*.exe` backup, and restores it if the new app fails to start. If the current folder is not writable, choose another folder for the updated executable. macOS and source runs continue to open the release page for installation.
+
+The bar watchdog respects Hide and the Always on top preference. Windows security screens and exclusive full-screen applications can still cover the bar. Local diagnostics are kept in `%APPDATA%/PakCricket/app.log` if needed to investigate a disappearance.
 
 ---
 
@@ -160,7 +170,9 @@ powershell Compress-Archive PakCricket.exe PakCricket-Windows.zip
 
 Pull requests welcome! The parser first decodes embedded JSON and Next.js flight chunks, then falls back to HTML scoped to individual match IDs. JSON-LD supplies fixture dates when available. It validates wickets and overs and reports unrecognized pages as refresh failures.
 
-Run the offline regression suite with `python -m unittest discover -s tests -v`. Run `python test_scraper.py` for a live network diagnostic. On Windows, `python tests/ui_smoke.py` checks temporary Tk windows and controls without starting the tray or fetching scores.
+Run the offline regression suite with `python -m unittest discover -s tests -v`. Run `python test_scraper.py` for a live network diagnostic. On Windows, `python tests/ui_smoke.py` checks temporary Tk windows and controls without starting the tray or fetching scores. After building, `python tests/packaged_update_smoke.py` verifies replacement and restart using disposable executable copies; it briefly starts a test score bar.
+
+Maintainers can run `python download_counts.py` to see GitHub release download counts by platform and version. This is not a unique-user count. The widget has no analytics or anonymous usage-reporting endpoint.
 
 Upcoming, live, and recent pages are fetched concurrently. A failed refresh preserves the previous complete snapshot; cached scores are kept in memory only. Preferences are stored in `%APPDATA%/PakCricket/settings.json` on Windows. Page formats can still change; fallback parsing is best effort and does not bypass access restrictions.
 

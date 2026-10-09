@@ -1,13 +1,22 @@
 """PAK Cricket desktop UI. Network work runs outside the UI thread."""
 import queue
+import logging
+from pathlib import Path
+import shutil
 import sys
 import threading
 import webbrowser
 from scraper import match_url, parse_date
 from scores import ScoreService, freshness
 from settings import load_settings, save_settings
-from updater import check_for_updates
+from updater import (monitor_updates, prepare_windows_update,
+                     start_update_helper, discard_stage)
+from update_engine import apply_update, confirm_update, cleanup_update, launch_app
 from version import CURRENT_VERSION, GITHUB_REPO
+
+# A copied portable executable acts as the helper, before any GUI is created.
+if __name__ == "__main__" and len(sys.argv) == 3 and sys.argv[1] == "--apply-update":
+    sys.exit(apply_update(sys.argv[2]))
 
 LABELS = {"live": "LIVE", "today": "TODAY", "scheduled": "SCHEDULED", "completed": "COMPLETED", "none": "NO FIXTURES", "unknown": "STATUS UNKNOWN"}
 COLORS = {"live": "#ef6262", "today": "#f0b95c", "scheduled": "#f0b95c", "completed": "#92a3b8", "none": "#92a3b8", "unknown": "#92a3b8"}
@@ -38,6 +47,9 @@ if sys.platform == "darwin":
             super().__init__("PAK Cricket", title="Fetching…", quit_button=None)
             self.service, self.selected, self.update = ScoreService(), None, None
             self.updates = queue.Queue()
+            self.update_stop, self.update_request = threading.Event(), threading.Event()
+            self.preferences = load_settings()
+            self.notified_version = self.preferences["notified_version"]
             self.menu = [rumps.MenuItem("Fetching scores…")]
             self.service.start()
             self.timer = rumps.Timer(self.tick, 2)
@@ -45,11 +57,21 @@ if sys.platform == "darwin":
             threading.Thread(target=self.check_update, daemon=True).start()
 
         def check_update(self):
-            self.updates.put(check_for_updates(CURRENT_VERSION, GITHUB_REPO))
+            monitor_updates(CURRENT_VERSION, GITHUB_REPO, self.updates.put, self.update_stop, self.update_request)
 
         def tick(self, _):
             if not self.updates.empty():
-                self.update = self.updates.get()
+                result = self.updates.get()
+                if not result.get("error"):
+                    self.update = result
+                if self.update and self.update.get("update_available") and self.notified_version != self.update["latest_version"]:
+                    self.notified_version = self.update["latest_version"]
+                    self.preferences["notified_version"] = self.notified_version
+                    save_settings(self.preferences)
+                    try:
+                        rumps.notification("PAK Cricket", "Update available", f"{self.notified_version} is available in the menu.")
+                    except Exception:
+                        logging.exception("macOS update notification failed")
             snapshot = self.service.snapshot()
             match = chosen_match(snapshot, self.selected)
             state = match["state"] if match else snapshot["state"]
@@ -68,6 +90,7 @@ if sys.platform == "darwin":
                     items.append(rumps.MenuItem(m["series"]))
             items += [None, rumps.MenuItem("Refresh now", callback=lambda _: self.service.request_refresh()),
                       rumps.MenuItem("Open on Cricbuzz", callback=lambda _: self.open_source()), None]
+            items.append(rumps.MenuItem("Check for updates", callback=lambda _: self.update_request.set()))
             if self.update and self.update.get("update_available"):
                 items.append(rumps.MenuItem(f"Download {self.update['latest_version']}", callback=lambda _: webbrowser.open(self.update["release_url"])))
             items.append(rumps.MenuItem("Quit", callback=self.quit))
@@ -84,6 +107,8 @@ if sys.platform == "darwin":
                 webbrowser.open(match_url(match))
 
         def quit(self, _):
+            self.update_stop.set()
+            self.update_request.set()
             self.service.stop()
             rumps.quit_application()
 
@@ -106,7 +131,14 @@ else:
             self.card_selection = None
             self.tray_icon = None
             self.update = None
+            self.update_busy = False
+            self.update_progress = None
+            self.update_stop, self.update_request = threading.Event(), threading.Event()
+            self.notified_version = self.preferences["notified_version"]
+            self.closing = False
             self.root = tk.Tk()
+            self.root.report_callback_exception = self.report_ui_error
+            self.root.protocol("WM_DELETE_WINDOW", self.quit)
             self.root.overrideredirect(True)
             self.root.attributes("-topmost", self.preferences["topmost"])
             self.root.configure(bg=BG)
@@ -124,10 +156,14 @@ else:
             self.details = tk.Button(self.root, text="Details ▾", command=self.show_details, bg=CARD, fg=FG,
                                      relief="flat", padx=10, takefocus=True)
             self.details.pack(side="right", padx=6, pady=7)
+            self.update_badge = tk.Button(self.root, text="Update", command=self.open_update,
+                                          bg=GREEN, fg=BG, relief="flat", padx=8)
             self.context = tk.Menu(self.root, tearoff=False)
             for name, command in [("Details", self.show_details), ("Refresh now", self.service.request_refresh),
                                   ("Open on Cricbuzz", self.open_source), ("Hide bar", self.toggle_bar),
                                   ("Always on top", self.toggle_topmost), ("Increase text size", lambda: self.resize_text(1)),
+                                  ("Check for updates", self.update_request.set),
+                                  ("Update now", self.open_update),
                                   ("Decrease text size", lambda: self.resize_text(-1)), ("Quit", self.quit)]:
                 self.context.add_command(label=name, command=command)
             for widget in (self.root, self.status, self.label):
@@ -144,7 +180,11 @@ else:
                 self.root.withdraw()
             self.service.start()
             self.root.after(100, self.tick)
+            self.root.after(2000, self.keep_visible)
             threading.Thread(target=self.check_update, daemon=True).start()
+            if len(sys.argv) == 3 and sys.argv[1] == "--update-health":
+                self.root.after(1500, lambda: confirm_update(sys.argv[2], sys.executable))
+                self.root.after(60000, lambda: cleanup_update(sys.argv[2], sys.executable))
 
         def save(self):
             save_settings(self.preferences)
@@ -156,6 +196,8 @@ else:
                 pystray.Menu(pystray.MenuItem("Show Score", action("details"), default=True),
                              pystray.MenuItem("Refresh now", action("refresh")),
                              pystray.MenuItem("Hide/Show Bar", action("toggle")),
+                             pystray.MenuItem("Check for updates", action("check_update")),
+                             pystray.MenuItem("Update now", action("install_update")),
                              pystray.MenuItem("Always on top", action("topmost"), checked=lambda _: self.preferences["topmost"]),
                              pystray.MenuItem("Quit", action("quit"))))
             threading.Thread(target=self.tray_icon.run, daemon=True).start()
@@ -169,7 +211,22 @@ else:
             return image
 
         def check_update(self):
-            self.commands.put(("update", check_for_updates(CURRENT_VERSION, GITHUB_REPO)))
+            monitor_updates(CURRENT_VERSION, GITHUB_REPO,
+                            lambda result: self.commands.put(("update", result)),
+                            self.update_stop, self.update_request)
+
+        def report_ui_error(self, kind, error, trace):
+            logging.error("UI callback failed", exc_info=(kind, error, trace))
+
+        def keep_visible(self):
+            try:
+                from window_visibility import ensure_bar_visible
+                ensure_bar_visible(self.root, self.preferences["hidden"], self.preferences["topmost"])
+            except Exception:
+                logging.exception("Could not restore score bar visibility")
+            finally:
+                if not self.closing:
+                    self.root.after(2000, self.keep_visible)
 
         def drag_start(self, event):
             self.drag_origin = (event.x_root, event.y_root, self.root.winfo_x(), self.root.winfo_y())
@@ -256,7 +313,7 @@ else:
                 return
             self.fresh_label.configure(text=freshness(snapshot), fg=COLORS["scheduled"] if snapshot["errors"] else MUTED)
             if self.update and self.update.get("update_available"):
-                self.update_button.configure(text=f"Download {self.update['latest_version']}")
+                self.update_button.configure(text=f"Update to {self.update['latest_version']}", state="disabled" if self.update_busy else "normal")
                 self.update_button.pack(side="left", padx=10)
             if self.cards_revision == snapshot["revision"]:
                 return
@@ -293,20 +350,101 @@ else:
             self.canvas.yview_moveto(position)
 
         def open_update(self):
-            if self.update and self.update.get("release_url"):
+            from tkinter import messagebox
+            if self.update_busy:
+                return
+            if not self.update or not self.update.get("update_available"):
+                self.update_request.set()
+                messagebox.showinfo("PAK Cricket", "Checking for updates. A button will appear when a new release is available.", parent=self.root)
+                return
+            if not getattr(sys, "frozen", False):
                 webbrowser.open(self.update["release_url"])
+                return
+            if not messagebox.askyesno("Update available", f"Download {self.update['latest_version']} and restart PAK Cricket?\n\nYour settings will be preserved and the current executable kept as a backup.", parent=self.root):
+                return
+            self.update_busy = True
+            self.update_progress = 0
+            info = dict(self.update)
+            def download():
+                try:
+                    prepared = prepare_windows_update(info, lambda percent: self.commands.put(("progress", percent)))
+                    self.commands.put(("prepared_update", prepared))
+                except Exception as exc:
+                    logging.exception("Update download failed")
+                    self.commands.put(("update_error", str(exc)))
+            threading.Thread(target=download, daemon=True).start()
+
+        def finish_update(self, prepared):
+            from tkinter import filedialog, messagebox
+            try:
+                if prepared["save_as"]:
+                    destination = filedialog.asksaveasfilename(title="Choose a writable folder for the updated app", initialfile="PakCricket.exe", defaultextension=".exe", filetypes=[("Windows executable", "*.exe")], parent=self.root)
+                    if not destination:
+                        discard_stage(prepared["stage"])
+                        self.update_busy, self.update_progress = False, None
+                        return
+                    if Path(destination).resolve() == Path(sys.executable).resolve():
+                        raise RuntimeError("Choose a different location; the current folder cannot be updated")
+                    shutil.copy2(prepared["incoming"], destination)
+                    launch_app(Path(destination).resolve())
+                    discard_stage(prepared["stage"])
+                else:
+                    start_update_helper(prepared)
+                self.quit()
+            except Exception as exc:
+                self.update_busy, self.update_progress = False, None
+                discard_stage(prepared["stage"])
+                logging.exception("Could not start update")
+                messagebox.showerror("Update failed", f"{exc}\n\nThe running app has not been replaced.", parent=self.root)
 
         def tick(self):
+            try:
+                self.tick_content()
+            except Exception:
+                logging.exception("Score bar refresh failed")
+            finally:
+                if not self.closing:
+                    self.root.after(1000, self.tick)
+
+        def tick_content(self):
             while not self.commands.empty():
                 command = self.commands.get()
                 if isinstance(command, tuple):
-                    self.update = command[1]
+                    kind, value = command
+                    if kind == "update":
+                        if not value.get("error"):
+                            self.update = value
+                        if self.update and self.update.get("update_available") and self.notified_version != self.update["latest_version"]:
+                            self.notified_version = self.update["latest_version"]
+                            self.preferences["notified_version"] = self.notified_version
+                            self.save()
+                            if self.tray_icon:
+                                try:
+                                    self.tray_icon.notify(f"{self.notified_version} is available. Click Update on the score bar.", "PAK Cricket update")
+                                except Exception:
+                                    logging.exception("Update notification failed")
+                    elif kind == "progress":
+                        self.update_progress = value
+                    elif kind == "prepared_update":
+                        self.finish_update(value)
+                        if self.closing:
+                            return
+                    elif kind == "update_error":
+                        from tkinter import messagebox
+                        self.update_busy, self.update_progress = False, None
+                        messagebox.showerror("Update failed", f"{value}\n\nThe running app was not changed. Try again or download from the release page.", parent=self.root)
                 elif command == "quit":
                     self.quit()
                     return
                 else:
                     {"details": self.show_details, "refresh": self.service.request_refresh,
-                     "toggle": self.toggle_bar, "topmost": self.toggle_topmost}[command]()
+                     "toggle": self.toggle_bar, "topmost": self.toggle_topmost,
+                     "check_update": self.update_request.set, "install_update": self.open_update}[command]()
+            if self.update and self.update.get("update_available"):
+                self.update_badge.configure(text=f"Updating {self.update_progress}%" if self.update_busy else "Update available", state="disabled" if self.update_busy else "normal")
+                self.update_badge.pack(side="right", padx=3, pady=7)
+            else:
+                self.update_badge.pack_forget()
             snapshot = self.service.snapshot()
             match = chosen_match(snapshot, self.preferences["selected"])
             state = match["state"] if match else snapshot["state"]
@@ -331,9 +469,11 @@ else:
                     self.tray_icon.icon = self.icon_image(color)
                     self.tray_color = color
             self.render_details(snapshot)
-            self.root.after(1000, self.tick)
 
         def quit(self):
+            self.closing = True
+            self.update_stop.set()
+            self.update_request.set()
             self.service.stop()
             if self.tray_icon:
                 self.tray_icon.stop()
@@ -346,4 +486,6 @@ else:
         CricketApp().run()
 
 if __name__ == "__main__":
+    from app_logging import configure_logging
+    configure_logging()
     main()

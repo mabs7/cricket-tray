@@ -65,6 +65,12 @@ jobs:
       - name: Build .exe
         run: pyinstaller --onefile --windowed --icon=icon.ico --name PakCricket main.py
 
+      - name: Test Windows bar and update controls
+        run: python tests/ui_smoke.py
+
+      - name: Test packaged portable updater
+        run: python tests/packaged_update_smoke.py
+
       - name: Zip .exe
         run: Compress-Archive -Path dist/PakCricket.exe -DestinationPath dist/PakCricket-Windows.zip
         shell: powershell

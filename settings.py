@@ -3,7 +3,7 @@ import json
 import os
 from pathlib import Path
 
-DEFAULTS = {"position": None, "hidden": False, "topmost": True, "text_size": 10, "selected": None}
+DEFAULTS = {"position": None, "hidden": False, "topmost": True, "text_size": 10, "selected": None, "notified_version": None}
 
 def settings_path():
     root = Path(os.environ.get("APPDATA") or Path.home() / ".config")
@@ -25,6 +25,8 @@ def load_settings(path=None):
             values["position"] = position
         if isinstance(data.get("selected"), str):
             values["selected"] = data["selected"]
+        if isinstance(data.get("notified_version"), str):
+            values["notified_version"] = data["notified_version"]
     except (OSError, ValueError, TypeError):
         pass
     return values

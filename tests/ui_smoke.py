@@ -19,6 +19,24 @@ with patch.object(service, "start"), patch.object(CricketApp, "check_update"), p
         app.show_details()
         app.popup.withdraw()
         app.root.update()
+        # A hidden user preference must win over the visibility watchdog.
+        app.preferences["hidden"] = True
+        app.keep_visible()
+        assert app.root.state() == "withdrawn"
+        app.preferences["hidden"] = False
+        app.keep_visible()
+        app.root.update()
+        assert app.root.winfo_viewable()
+        app.root.withdraw()
+        # Update availability is visible without opening details.
+        app.commands.put(("update", {"update_available": True, "latest_version": "v9.0.0", "error": ""}))
+        app.tick_content()
+        app.root.update()
+        assert app.update_badge.winfo_manager() == "pack"
+        # An exception in a refresh must not stop scheduling the next refresh.
+        with patch.object(app, "tick_content", side_effect=RuntimeError("simulated UI failure")), patch.object(app.root, "after") as scheduled:
+            app.tick()
+            scheduled.assert_called_once_with(1000, app.tick)
         assert app.popup.resizable() == (1, 1)
         service.data.update(matches=[match], updated_at=1, revision=1)
         app.render_details(service.snapshot())
@@ -40,6 +58,6 @@ with patch.object(service, "start"), patch.object(CricketApp, "check_update"), p
         app.show_details()
         app.popup.withdraw()
         app.root.update()
-        print("Windows UI smoke check passed: startup, dynamic cards, resizing, pinning, preferences, popup lifecycle")
+        print("Windows UI smoke check passed: visibility recovery, intentional hiding, update badge, refresh recovery, and popup controls")
     finally:
         app.quit()
