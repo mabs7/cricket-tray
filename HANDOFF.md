@@ -7,23 +7,19 @@ see [AGENTS.md](AGENTS.md) for session instructions and
 ## Baseline and current work
 
 - Repository: [mabs7/cricket-tray](https://github.com/mabs7/cricket-tray), branch
-  `main`. Application version: **v2.8.0**, commit `3de9eab`.
+  `main`. Application version: **v2.8.0**, commit `4cf12dc`.
 - Added a static GitHub Pages showcase and download landing page in
   [docs/index.html](docs/index.html) (with [docs/.nojekyll](docs/.nojekyll)) on
-  macOS (`3de9eab`), and refined it on Windows (**2026-11-03**) into a cleaner,
-  minimalist design with a restrained dark slate palette, prominent keyword-focused
-  copy, and distinct hover glows on both the Windows (emerald) and macOS (sky-blue)
-  download buttons. It features an interactive Windows floating-bar and macOS
-  menu-bar preview, accurate platform-specific capabilities, direct
-  `/releases/latest/download/` asset links (`PakCricket-Windows.zip` and
-  `PakCricket-Mac.zip`), and an "About the Developer" section linking to Muhammad
-  Abubakar's portfolio (`https://abubakar144-portfolio.netlify.app`) and GitHub
-  profile.
+  macOS (`3de9eab`), refined it on Windows (`4cf12dc`) into a minimalist design
+  with prominent keyword-focused copy and distinct hover glows on both download
+  buttons, and added Google Search indexing/SEO assets ([docs/sitemap.xml](docs/sitemap.xml),
+  [docs/robots.txt](docs/robots.txt), canonical URL, and `SoftwareApplication`
+  JSON-LD structured data in `docs/index.html`).
 - Existing Python application code, tests, version, and CI workflow are unchanged.
-  The owner requested committing and pushing this minimalist landing-page refinement
-  to `main`; no new application release tag is created. Verify `git status --short --branch`
-  and `git log -1` for the actual commit and synchronization state before continuing
-  on another computer.
+  These SEO/indexing files are committed and pushed to `main`; no new application
+  release tag is created. Verify `git status --short --branch` and `git log -1`
+  for the actual commit and synchronization state before continuing on another
+  computer.
 
 ## Recent implementation history
 
@@ -33,6 +29,7 @@ see [AGENTS.md](AGENTS.md) for session instructions and
 | `36846c2` / v2.8.0 (2026-10-09) | Windows visibility watchdog and callback recovery; local logging; periodic update checks and visible notifications; portable Windows download/verify/replace/restart with backup/rollback; maintainer download-count report; Windows smoke checks added to release CI. |
 | `542692f` (2026-10-30) | Added AGENTS.md, PROJECT_CONTEXT.md, and HANDOFF.md persistent repository context. |
 | `3de9eab` (2026-11-03) | Added GitHub Pages showcase landing page (`docs/index.html`, `docs/.nojekyll`) and updated context. |
+| `4cf12dc` (2026-11-03) | Refined landing page with minimalist design, keyword-first copy, and distinct Windows/macOS button glows. |
 
 Conversation evidence: on 2026-10-09 the owner reported live scores updating
 correctly, but the bar disappearing after some time. v2.8.0 addresses visibility
@@ -46,10 +43,10 @@ an actual v2.8.0-to-newer-version update is recorded in the available history.
   copies of the same build; it is not proof of a real upgrade between different
   published versions. GitHub Windows/macOS builds and release publication passed
   for v2.8.0. [Recorded run](https://github.com/mabs7/cricket-tray/actions/runs/37939514206).
-- **Current landing-page task, 2026-11-03 (Windows):** pulled `3de9eab` from
-  `origin/main` and refined `docs/index.html` for a minimalist color palette,
-  prominent keyword-driven copy, and distinct hover glows on the Windows and macOS
-  download buttons. Verified repository-relative links, download asset URLs
+- **Current landing-page & SEO task, 2026-11-03 (Windows):** pulled `3de9eab` from
+  `origin/main`, refined `docs/index.html` (`4cf12dc`), and added `docs/sitemap.xml`,
+  `docs/robots.txt`, canonical link, and `SoftwareApplication` JSON-LD metadata for
+  Google Search indexing. Verified repository-relative links, download asset URLs
   (`PakCricket-Windows.zip`, `PakCricket-Mac.zip`), platform feature accuracy, and
   `git diff --check`. Python application code and builds were unchanged.
 - [Issue #1](https://github.com/mabs7/cricket-tray/issues/1) reported missing
@@ -106,6 +103,6 @@ it was repeated in the current session.
 
 ## Documentation verification for this handoff
 
-- Updated `docs/index.html` and `HANDOFF.md`; existing Python application and test files are unchanged.
+- Added `docs/sitemap.xml` and `docs/robots.txt`, and updated `docs/index.html`, `PROJECT_CONTEXT.md`, and `HANDOFF.md`; existing Python application and test files are unchanged.
 - Repository-relative documentation links resolve and `git diff --check` passes.
 - No application tests/builds were required or rerun; no new application release was created.
