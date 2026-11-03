@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PAK Cricket — Live Pakistan &amp; PSL Score Widget for Windows &amp; macOS</title>
-  <meta name="description" content="A free, lightweight, open-source desktop widget for live Pakistan international and PSL cricket scores. Floating bar on Windows, menu bar app on macOS. No API key, no installer, zero tracking." />
-  <meta name="theme-color" content="#121a24" />
+  <meta name="description" content="A minimalist, open-source desktop widget for live Pakistan international and PSL cricket scores. Floating bar on Windows, menu bar app on macOS. Free, portable, zero tracking." />
+  <meta name="theme-color" content="#0d1117" />
   <meta property="og:title" content="PAK Cricket — Live Desktop Score Widget (Windows &amp; macOS)" />
-  <meta property="og:description" content="Keep live Pakistan &amp; PSL cricket scores on your screen while you work. Free, portable, API-key-free, and open source." />
+  <meta property="og:description" content="Live Pakistan &amp; PSL cricket scores on your screen while you work. Free, portable, API-key-free, and open source." />
   <meta property="og:type" content="website" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%238B0000'/%3E%3Ccircle cx='24' cy='22' r='9' fill='%23C0392B' opacity='0.85'/%3E%3Cpath d='M16 42 A22 22 0 0 1 48 22' fill='none' stroke='%23F5DEB3' stroke-width='3' stroke-linecap='round' stroke-dasharray='4 4'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,27 +15,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0c1219;
-      --bg-elevated: #121a24;
-      --card: #1d2938;
-      --card-hover: #243346;
-      --border: rgba(166, 181, 199, 0.14);
-      --border-strong: rgba(100, 212, 164, 0.35);
-      --fg: #eef3f8;
-      --muted: #a6b5c7;
-      --subtle: #6e8096;
-      --green: #64d4a4;
-      --green-dim: rgba(100, 212, 164, 0.14);
-      --live: #ef6262;
-      --live-dim: rgba(239, 98, 98, 0.16);
-      --scheduled: #f0b95c;
-      --scheduled-dim: rgba(240, 185, 92, 0.16);
-      --completed: #92a3b8;
-      --radius-lg: 18px;
-      --radius-md: 12px;
-      --radius-sm: 8px;
-      --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
-      --max-w: 1140px;
+      --bg: #0b0f14;
+      --surface: #121820;
+      --surface-elevated: #18212c;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.18);
+      --fg: #f3f6fa;
+      --muted: #8b98a9;
+      --subtle: #5c697a;
+      --win-accent: #64d4a4;
+      --mac-accent: #7ec8f8;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --max-w: 1020px;
     }
 
     * {
@@ -49,21 +42,26 @@
       background-color: var(--bg);
       color: var(--fg);
       font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      line-height: 1.6;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
     }
 
     body {
       min-height: 100vh;
       overflow-x: hidden;
       background:
-        radial-gradient(circle at 18% 0%, rgba(100, 212, 164, 0.10), transparent 42%),
-        radial-gradient(circle at 85% 12%, rgba(239, 98, 98, 0.08), transparent 36%),
+        radial-gradient(circle at 50% 0%, rgba(100, 212, 164, 0.06), transparent 48%),
         var(--bg);
     }
 
     a {
       color: inherit;
       text-decoration: none;
+    }
+
+    strong {
+      color: var(--fg);
+      font-weight: 600;
     }
 
     .container {
@@ -78,9 +76,9 @@
       position: sticky;
       top: 0;
       z-index: 50;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      background: rgba(12, 18, 25, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(11, 15, 20, 0.85);
       border-bottom: 1px solid var(--border);
     }
 
@@ -88,55 +86,43 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 68px;
+      height: 64px;
       gap: 16px;
     }
 
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       font-weight: 700;
-      font-size: 1.05rem;
+      font-size: 1rem;
       letter-spacing: -0.02em;
     }
 
-    .brand-ball {
-      width: 32px;
-      height: 32px;
+    .brand-dot {
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #c0392b, #8b0000 70%);
-      box-shadow: 0 0 18px rgba(239, 98, 98, 0.35), inset 0 0 0 1.5px rgba(255, 255, 255, 0.18);
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .brand-ball::after {
-      content: "";
-      position: absolute;
-      inset: 5px;
-      border-radius: 50%;
-      border: 1.5px dashed #f5deb3;
-      transform: rotate(-28deg);
-      opacity: 0.85;
+      background: var(--win-accent);
+      box-shadow: 0 0 12px rgba(100, 212, 164, 0.6);
     }
 
     .version-pill {
       font-family: "JetBrains Mono", monospace;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--green);
-      background: var(--green-dim);
-      border: 1px solid var(--border-strong);
-      padding: 2px 9px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
       border-radius: 999px;
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 26px;
-      font-size: 0.92rem;
+      gap: 24px;
+      font-size: 0.88rem;
       color: var(--muted);
     }
 
@@ -147,131 +133,129 @@
     .nav-cta {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
+      gap: 7px;
+      padding: 7px 13px;
       border-radius: var(--radius-sm);
-      background: var(--card);
+      background: var(--surface);
       border: 1px solid var(--border);
       color: var(--fg) !important;
       font-weight: 600;
-      font-size: 0.86rem;
-      transition: background 0.18s ease, border-color 0.18s ease;
+      font-size: 0.84rem;
+      transition: border-color 0.18s ease, background 0.18s ease;
     }
 
     .nav-cta:hover {
-      background: var(--card-hover);
-      border-color: rgba(166, 181, 199, 0.35);
+      background: var(--surface-elevated);
+      border-color: var(--border-hover);
     }
 
     /* ── Hero ── */
     .hero {
-      padding: 72px 0 56px;
+      padding: 76px 0 48px;
       text-align: center;
     }
 
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      background: rgba(29, 41, 56, 0.75);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 0.84rem;
-      font-weight: 500;
-      margin-bottom: 24px;
-    }
-
-    .pulse-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--live);
-      box-shadow: 0 0 0 0 rgba(239, 98, 98, 0.7);
-      animation: pulse 1.8s infinite;
-    }
-
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(239, 98, 98, 0.65); }
-      70% { box-shadow: 0 0 0 8px rgba(239, 98, 98, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(239, 98, 98, 0); }
+    .hero-eyebrow {
+      display: inline-block;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--win-accent);
+      margin-bottom: 18px;
     }
 
     .hero h1 {
-      font-size: clamp(2.25rem, 5vw, 3.7rem);
+      font-size: clamp(2.3rem, 5vw, 3.6rem);
       font-weight: 800;
       letter-spacing: -0.035em;
-      line-height: 1.12;
-      max-width: 820px;
-      margin: 0 auto 20px;
+      line-height: 1.1;
+      max-width: 760px;
+      margin: 0 auto 18px;
     }
 
-    .hero h1 .accent {
-      background: linear-gradient(135deg, #64d4a4 0%, #9ef0cc 50%, #f0b95c 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .hero h1 span {
+      color: var(--muted);
+      font-weight: 700;
     }
 
     .hero-subtitle {
-      font-size: clamp(1.02rem, 2vw, 1.2rem);
+      font-size: clamp(1rem, 1.8vw, 1.14rem);
       color: var(--muted);
-      max-width: 670px;
-      margin: 0 auto 34px;
+      max-width: 560px;
+      margin: 0 auto 32px;
     }
 
+    /* ── Download Buttons (Distinct Hover Glows) ── */
     .download-row {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 24px;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 11px;
-      padding: 14px 24px;
+      padding: 13px 22px;
       border-radius: var(--radius-md);
       font-weight: 600;
-      font-size: 0.98rem;
+      font-size: 0.94rem;
       border: 1px solid transparent;
       cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
     }
 
     .btn:hover {
       transform: translateY(-2px);
     }
 
-    .btn-primary {
-      background: var(--green);
-      color: #0b141c;
-      box-shadow: 0 10px 28px rgba(100, 212, 164, 0.25);
+    /* Windows Button: Emerald Glow */
+    .btn-win {
+      background: var(--win-accent);
+      color: #09130e;
+      border-color: rgba(100, 212, 164, 0.5);
+      box-shadow: 0 8px 24px rgba(100, 212, 164, 0.18);
     }
 
-    .btn-primary:hover {
-      background: #77ddb1;
-      box-shadow: 0 14px 32px rgba(100, 212, 164, 0.34);
+    .btn-win:hover {
+      background: #78dfb3;
+      border-color: #9ef0cc;
+      box-shadow: 0 0 28px rgba(100, 212, 164, 0.52), 0 12px 32px rgba(100, 212, 164, 0.28);
     }
 
-    .btn-secondary {
-      background: var(--card);
+    /* macOS Button: Ice-Blue / Cyan Glow */
+    .btn-mac {
+      background: var(--surface-elevated);
+      color: var(--fg);
+      border-color: rgba(126, 200, 248, 0.32);
+      box-shadow: 0 8px 24px rgba(126, 200, 248, 0.12);
+    }
+
+    .btn-mac:hover {
+      background: #1e2b3a;
+      border-color: var(--mac-accent);
+      box-shadow: 0 0 28px rgba(126, 200, 248, 0.48), 0 12px 32px rgba(126, 200, 248, 0.24);
+    }
+
+    .btn-neutral {
+      background: var(--surface);
       color: var(--fg);
       border-color: var(--border);
     }
 
-    .btn-secondary:hover {
-      background: var(--card-hover);
-      border-color: rgba(166, 181, 199, 0.35);
+    .btn-neutral:hover {
+      background: var(--surface-elevated);
+      border-color: var(--border-hover);
     }
 
     .btn-sub {
       display: block;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       font-weight: 500;
-      opacity: 0.8;
+      opacity: 0.78;
       text-align: left;
     }
 
@@ -282,26 +266,33 @@
       line-height: 1.25;
     }
 
-    .hero-meta {
+    /* Minimal Keyword Pills */
+    .keyword-strip {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 20px;
-      font-size: 0.83rem;
-      color: var(--subtle);
-      margin-top: 12px;
+      gap: 8px;
+      margin-top: 8px;
     }
 
-    .hero-meta span {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+    .keyword-pill {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+
+    .keyword-pill strong {
+      color: var(--fg);
     }
 
     /* ── Interactive Widget Showcase ── */
     .showcase-wrap {
-      margin: 28px auto 0;
-      max-width: 960px;
+      margin: 36px auto 0;
+      max-width: 880px;
     }
 
     .showcase-controls {
@@ -309,17 +300,17 @@
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
-      background: var(--bg-elevated);
+      gap: 10px;
+      margin-bottom: 12px;
+      background: var(--surface);
       border: 1px solid var(--border);
-      padding: 10px 14px;
+      padding: 8px 12px;
       border-radius: var(--radius-md);
     }
 
     .tab-group {
       display: inline-flex;
-      gap: 6px;
+      gap: 4px;
       flex-wrap: wrap;
     }
 
@@ -327,99 +318,72 @@
       background: transparent;
       color: var(--muted);
       border: 1px solid transparent;
-      padding: 6px 13px;
+      padding: 5px 12px;
       border-radius: var(--radius-sm);
-      font-size: 0.83rem;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
       transition: all 0.15s ease;
     }
 
     .tab-btn:hover {
       color: var(--fg);
-      background: rgba(255, 255, 255, 0.04);
     }
 
     .tab-btn.active {
-      background: var(--card);
+      background: var(--surface-elevated);
       color: var(--fg);
       border-color: var(--border);
     }
 
-    .state-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
     .desktop-stage {
       position: relative;
-      min-height: 450px;
+      min-height: 380px;
       border-radius: var(--radius-lg);
-      background:
-        linear-gradient(160deg, #152232 0%, #0d1520 55%, #111c29 100%);
+      background: var(--surface);
       border: 1px solid var(--border);
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
       overflow: hidden;
       text-align: left;
-      padding: 24px;
+      padding: 28px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
 
-    /* Faint IDE background decoration to show "while you work" */
-    .desktop-code-bg {
-      position: absolute;
-      inset: 76px 28px 28px 28px;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      background: rgba(9, 13, 19, 0.55);
-      padding: 20px 24px;
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.8rem;
-      color: rgba(166, 181, 199, 0.22);
-      pointer-events: none;
-      user-select: none;
-      line-height: 1.75;
-    }
-
-    /* Authentic Windows Floating Bar replica from main.py */
+    /* Windows Floating Bar replica from main.py */
     .win-floating-bar {
       position: relative;
       z-index: 5;
       margin: 0 auto;
       width: 100%;
-      max-width: 640px;
+      max-width: 620px;
       min-height: 44px;
       background: #121a24;
-      border: 1px solid rgba(166, 181, 199, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 6px;
       display: flex;
       align-items: center;
       padding: 4px 8px;
       gap: 10px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
       font-family: "Segoe UI", "Inter", sans-serif;
       user-select: none;
     }
 
     .win-status {
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       white-space: nowrap;
       padding: 0 4px;
       letter-spacing: 0.02em;
+      color: var(--win-accent);
     }
 
     .win-score-text {
       flex: 1;
       font-weight: 700;
-      font-size: 0.93rem;
+      font-size: 0.92rem;
       color: #eef3f8;
       white-space: nowrap;
       overflow: hidden;
@@ -432,33 +396,28 @@
       border: none;
       border-radius: 4px;
       padding: 6px 11px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       cursor: pointer;
-      transition: filter 0.15s ease;
-    }
-
-    .win-btn:hover {
-      filter: brightness(1.15);
     }
 
     .win-btn-update {
-      background: #64d4a4;
-      color: #121a24;
+      background: var(--win-accent);
+      color: #0b141c;
     }
 
     /* Windows Details Popup replica from main.py */
     .win-details-popup {
       position: relative;
       z-index: 4;
-      margin: 18px auto 0;
+      margin: 16px auto 0;
       width: 100%;
-      max-width: 540px;
+      max-width: 500px;
       background: #121a24;
-      border: 1px solid rgba(166, 181, 199, 0.24);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 10px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
-      padding: 18px 20px;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6);
+      padding: 16px 18px;
       font-family: "Segoe UI", "Inter", sans-serif;
     }
 
@@ -466,60 +425,59 @@
       display: flex;
       align-items: baseline;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       gap: 8px;
-      flex-wrap: wrap;
     }
 
     .win-popup-title {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: #eef3f8;
     }
 
     .win-popup-fresh {
-      font-size: 0.8rem;
-      color: #a6b5c7;
+      font-size: 0.78rem;
+      color: var(--muted);
     }
 
     .win-match-card {
       background: #1d2938;
       border-radius: 8px;
-      padding: 13px 15px;
-      margin-bottom: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .win-card-state {
-      font-size: 0.73rem;
+      font-size: 0.7rem;
       font-weight: 700;
-      letter-spacing: 0.04em;
-      margin-bottom: 3px;
+      letter-spacing: 0.05em;
+      color: var(--win-accent);
+      margin-bottom: 2px;
     }
 
     .win-card-teams {
-      font-size: 1rem;
+      font-size: 0.96rem;
       font-weight: 700;
       color: #eef3f8;
     }
 
     .win-card-series {
-      font-size: 0.78rem;
-      color: #a6b5c7;
+      font-size: 0.76rem;
+      color: var(--muted);
       margin-bottom: 8px;
     }
 
     .win-card-score-row {
-      font-size: 1.04rem;
+      font-size: 0.98rem;
       font-weight: 700;
-      color: #64d4a4;
-      font-family: "JetBrains Mono", "Segoe UI", monospace;
+      color: var(--win-accent);
+      font-family: "JetBrains Mono", monospace;
       margin: 2px 0;
     }
 
     .win-card-status {
-      font-size: 0.82rem;
-      color: #a6b5c7;
+      font-size: 0.8rem;
+      color: var(--muted);
       margin-top: 6px;
     }
 
@@ -529,7 +487,7 @@
       align-items: center;
       margin-top: 10px;
       padding-top: 8px;
-      border-top: 1px solid rgba(166, 181, 199, 0.12);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     /* macOS Menu Bar replica */
@@ -543,391 +501,264 @@
     .mac-menubar {
       width: 100%;
       height: 32px;
-      background: rgba(24, 32, 44, 0.88);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
+      background: #18212c;
+      border: 1px solid var(--border);
+      border-radius: 7px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 14px;
-      font-size: 0.82rem;
-      font-weight: 500;
-      color: #eef3f8;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      font-size: 0.8rem;
+      color: var(--fg);
     }
 
     .mac-menubar-left {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       color: var(--muted);
     }
 
-    .mac-menubar-left strong {
-      color: var(--fg);
-    }
-
-    .mac-menubar-right {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
     .mac-widget-pill {
-      background: rgba(100, 212, 164, 0.16);
-      border: 1px solid rgba(100, 212, 164, 0.4);
+      background: rgba(126, 200, 248, 0.12);
+      border: 1px solid rgba(126, 200, 248, 0.35);
       padding: 2px 10px;
       border-radius: 5px;
       font-weight: 600;
-      color: #eef3f8;
-      font-size: 0.8rem;
+      color: var(--fg);
+      font-size: 0.78rem;
     }
 
     .mac-dropdown {
       margin: 8px 0 0 auto;
-      width: 320px;
+      width: 300px;
       max-width: 100%;
-      background: rgba(26, 35, 48, 0.96);
-      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: #141c26;
+      border: 1px solid var(--border-hover);
       border-radius: 10px;
       padding: 6px;
-      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.65);
-      font-size: 0.84rem;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6);
+      font-size: 0.82rem;
     }
 
     .mac-menu-item {
-      padding: 5px 10px;
+      padding: 4px 10px;
       border-radius: 5px;
       color: var(--fg);
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     .mac-menu-item.muted {
       color: var(--muted);
-      font-size: 0.79rem;
-    }
-
-    .mac-menu-item.action:hover {
-      background: #2f6fed;
-      color: #fff;
-      cursor: pointer;
+      font-size: 0.78rem;
     }
 
     .mac-divider {
       height: 1px;
-      background: rgba(255, 255, 255, 0.1);
-      margin: 5px 4px;
+      background: var(--border);
+      margin: 4px;
     }
 
     .stage-caption {
-      position: relative;
-      z-index: 5;
       margin-top: 14px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      font-size: 0.8rem;
-      color: var(--muted);
+      font-size: 0.76rem;
+      color: var(--subtle);
     }
 
-    /* ── Section Generic ── */
+    /* ── Sections ── */
     section {
-      padding: 76px 0;
+      padding: 56px 0;
     }
 
     .section-header {
       text-align: center;
-      max-width: 680px;
-      margin: 0 auto 48px;
-    }
-
-    .section-eyebrow {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--green);
-      margin-bottom: 10px;
-      display: block;
+      max-width: 560px;
+      margin: 0 auto 36px;
     }
 
     .section-title {
-      font-size: clamp(1.75rem, 3.4vw, 2.45rem);
+      font-size: clamp(1.5rem, 3vw, 2rem);
       font-weight: 800;
       letter-spacing: -0.025em;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .section-desc {
       color: var(--muted);
-      font-size: 1.02rem;
+      font-size: 0.95rem;
     }
 
-    /* ── Feature Grid ── */
+    /* ── Minimal Feature Grid (Keyword-first) ── */
     .feature-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 16px;
     }
 
     .feature-card {
-      background: var(--bg-elevated);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      padding: 26px;
-      transition: transform 0.18s ease, border-color 0.18s ease;
+      padding: 22px;
+      transition: border-color 0.18s ease;
     }
 
     .feature-card:hover {
-      transform: translateY(-3px);
-      border-color: rgba(100, 212, 164, 0.32);
+      border-color: var(--border-hover);
     }
 
-    .feature-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-      font-size: 1.2rem;
+    .feature-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--win-accent);
+      margin-bottom: 6px;
+      display: block;
     }
 
     .feature-card h3 {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .feature-card p {
       color: var(--muted);
-      font-size: 0.93rem;
+      font-size: 0.88rem;
     }
 
-    /* ── Platform Comparison ── */
+    /* ── Platform Cards ── */
     .platform-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
     }
 
     .platform-card {
-      background: var(--bg-elevated);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 32px;
+      padding: 28px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-    }
-
-    .platform-card.highlighted {
-      border-color: var(--border-strong);
-      box-shadow: 0 0 0 1px rgba(100, 212, 164, 0.18), var(--shadow-lg);
     }
 
     .platform-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 18px;
-      gap: 12px;
+      margin-bottom: 16px;
     }
 
     .platform-title {
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       font-weight: 800;
-      display: flex;
-      align-items: center;
-      gap: 10px;
     }
 
     .os-badge {
-      font-size: 0.74rem;
-      font-weight: 600;
-      padding: 3px 10px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.72rem;
+      padding: 3px 9px;
       border-radius: 999px;
-      background: var(--card);
+      background: var(--surface-elevated);
       color: var(--muted);
       border: 1px solid var(--border);
     }
 
     .os-badge.detected {
-      background: var(--green-dim);
-      color: var(--green);
-      border-color: var(--border-strong);
+      color: var(--fg);
+      border-color: var(--border-hover);
+    }
+
+    .steps-line {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 18px;
     }
 
     .platform-list {
       list-style: none;
-      margin: 16px 0 26px;
+      margin: 0 0 24px;
       display: grid;
-      gap: 11px;
-      font-size: 0.93rem;
+      gap: 9px;
+      font-size: 0.88rem;
       color: var(--muted);
-    }
-
-    .platform-list li {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
     }
 
     .platform-list li::before {
-      content: "✓";
-      color: var(--green);
-      font-weight: 800;
-      flex-shrink: 0;
-    }
-
-    .steps-box {
-      background: rgba(12, 18, 25, 0.65);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 14px 16px;
-      margin-bottom: 20px;
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-
-    .steps-box code {
-      font-family: "JetBrains Mono", monospace;
-      color: var(--fg);
-      background: var(--card);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-    }
-
-    /* ── Architecture / How It Works Strip ── */
-    .pipeline-box {
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 32px;
-      margin-top: 24px;
-    }
-
-    .pipeline-steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 18px;
-      margin-top: 20px;
-    }
-
-    .pipeline-step {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 18px;
-    }
-
-    .pipeline-step-num {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.75rem;
-      color: var(--green);
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .pipeline-step h4 {
-      font-size: 0.98rem;
-      margin-bottom: 6px;
-    }
-
-    .pipeline-step p {
-      font-size: 0.85rem;
-      color: var(--muted);
+      content: "→ ";
+      color: var(--subtle);
     }
 
     /* ── Developer Section ── */
     .dev-card {
-      background: linear-gradient(145deg, #162231 0%, #121a24 100%);
-      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: clamp(28px, 5vw, 48px);
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 28px;
-      box-shadow: var(--shadow-lg);
-      position: relative;
-      overflow: hidden;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
 
     .dev-top {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 22px;
+      gap: 16px;
     }
 
     .dev-avatar {
-      width: 76px;
-      height: 76px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--green), #2b7a78);
-      color: #0b141c;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-hover);
+      color: var(--fg);
       font-weight: 800;
-      font-size: 1.65rem;
+      font-size: 1.15rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 10px 25px rgba(100, 212, 164, 0.28);
       flex-shrink: 0;
     }
 
     .dev-identity h3 {
-      font-size: 1.6rem;
+      font-size: 1.25rem;
       font-weight: 800;
-      letter-spacing: -0.02em;
     }
 
     .dev-handle {
       font-family: "JetBrains Mono", monospace;
-      color: var(--green);
-      font-size: 0.9rem;
-      margin-top: 2px;
-    }
-
-    .dev-role {
       color: var(--muted);
-      font-size: 0.98rem;
-      margin-top: 4px;
+      font-size: 0.82rem;
     }
 
     .dev-bio {
-      color: var(--fg);
-      font-size: 1.02rem;
-      line-height: 1.7;
-      max-width: 820px;
-    }
-
-    .dev-bio p + p {
-      margin-top: 12px;
       color: var(--muted);
+      font-size: 0.94rem;
+      max-width: 720px;
     }
 
     .dev-links {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      padding-top: 6px;
     }
 
     /* ── Footer ── */
     footer {
       border-top: 1px solid var(--border);
-      padding: 40px 0;
+      padding: 32px 0;
       color: var(--subtle);
-      font-size: 0.88rem;
+      font-size: 0.84rem;
     }
 
     .footer-inner {
@@ -941,7 +772,6 @@
     .footer-links {
       display: flex;
       gap: 20px;
-      flex-wrap: wrap;
     }
 
     .footer-links a:hover {
@@ -967,17 +797,17 @@
   <header class="navbar">
     <div class="container navbar-inner">
       <a href="#" class="brand">
-        <span class="brand-ball" aria-hidden="true"></span>
+        <span class="brand-dot" aria-hidden="true"></span>
         <span>PAK Cricket</span>
         <span class="version-pill" id="nav-version">v2.8.0</span>
       </a>
       <nav class="nav-links">
-        <a href="#preview">Live Preview</a>
-        <a href="#features">Features</a>
+        <a href="#preview">Preview</a>
+        <a href="#features">Highlights</a>
         <a href="#download">Download</a>
-        <a href="#developer">About the Developer</a>
+        <a href="#developer">Developer</a>
         <a href="https://github.com/mabs7/cricket-tray" target="_blank" rel="noopener" class="nav-cta">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11.05 11.05 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11.05 11.05 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
           <span>GitHub</span>
         </a>
       </nav>
@@ -988,31 +818,29 @@
   <main>
     <section class="hero">
       <div class="container">
-        <div class="hero-badge">
-          <span class="pulse-dot" aria-hidden="true"></span>
-          <span>Built for Pakistan International &amp; PSL Cricket Fans</span>
-        </div>
+        <span class="hero-eyebrow">Pakistan Internationals &amp; PSL</span>
 
         <h1>
-          Live Pakistan Cricket Scores.<br />
-          <span class="accent">Right on Your Desktop.</span>
+          Live Cricket Scores.<br />
+          <span>Pinned to Your Desktop.</span>
         </h1>
 
         <p class="hero-subtitle">
-          A lightweight, open-source desktop widget that keeps live Pakistan and PSL scores visible while you code or work — floating bar on Windows, menu bar app on macOS. No API key, no browser tab clutter, zero tracking.
+          <strong>Floating bar</strong> on Windows. <strong>Menu bar app</strong> on macOS.
+          Zero browser clutter while you work.
         </p>
 
         <div class="download-row">
-          <a id="dl-win-hero" href="https://github.com/mabs7/cricket-tray/releases/latest/download/PakCricket-Windows.zip" class="btn btn-primary">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 3.5 10.5 2.3v9.2H2V3.5zm9.5-1.35L22 0.7v10.8H11.5V2.15zM2 12.5h8.5v9.2L2 20.5v-8zm9.5 0H22v10.8l-10.5-1.45V12.5z"/></svg>
+          <a id="dl-win-hero" href="https://github.com/mabs7/cricket-tray/releases/latest/download/PakCricket-Windows.zip" class="btn btn-win">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 3.5 10.5 2.3v9.2H2V3.5zm9.5-1.35L22 0.7v10.8H11.5V2.15zM2 12.5h8.5v9.2L2 20.5v-8zm9.5 0H22v10.8l-10.5-1.45V12.5z"/></svg>
             <span class="btn-text-group">
               <span>Download for Windows</span>
-              <span class="btn-sub" id="win-sub-label">Portable .exe (No installer needed)</span>
+              <span class="btn-sub" id="win-sub-label">Portable .exe · No installer</span>
             </span>
           </a>
 
-          <a id="dl-mac-hero" href="https://github.com/mabs7/cricket-tray/releases/latest/download/PakCricket-Mac.zip" class="btn btn-secondary">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.33c.67-.81 1.12-1.94 1-3.08-.96.04-2.13.64-2.82 1.45-.61.7-.11 1.85-.98 2.97 1.08.08 2.13-.53 2.8-1.34"/></svg>
+          <a id="dl-mac-hero" href="https://github.com/mabs7/cricket-tray/releases/latest/download/PakCricket-Mac.zip" class="btn btn-mac">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.33c.67-.81 1.12-1.94 1-3.08-.96.04-2.13.64-2.82 1.45-.61.7-.11 1.85-.98 2.97 1.08.08 2.13-.53 2.8-1.34"/></svg>
             <span class="btn-text-group">
               <span>Download for macOS</span>
               <span class="btn-sub" id="mac-sub-label">Menu Bar .app Archive</span>
@@ -1020,11 +848,11 @@
           </a>
         </div>
 
-        <div class="hero-meta">
-          <span>🔒 100% Free &amp; No Telemetry</span>
-          <span>⚡ No API Key Required</span>
-          <span>🛡️ SHA-256 Verified Portable Updates (Windows)</span>
-          <span>🐍 Python 3.11+ Open Source</span>
+        <div class="keyword-strip">
+          <span class="keyword-pill"><strong>100% Free</strong> &amp; Open Source</span>
+          <span class="keyword-pill"><strong>No API Key</strong> Required</span>
+          <span class="keyword-pill"><strong>Zero Telemetry</strong></span>
+          <span class="keyword-pill"><strong>SHA-256</strong> Verified Updates</span>
         </div>
 
         <!-- ── Interactive Widget Preview ── -->
@@ -1032,44 +860,36 @@
           <div class="showcase-controls">
             <div class="tab-group" role="tablist" aria-label="Platform preview">
               <button type="button" class="tab-btn active" id="tab-win" onclick="setPlatform('win')">
-                🪟 Windows Floating Bar
+                Windows Bar
               </button>
               <button type="button" class="tab-btn" id="tab-mac" onclick="setPlatform('mac')">
-                🍎 macOS Menu Bar
+                macOS Menu Bar
               </button>
             </div>
 
             <div class="tab-group" role="tablist" aria-label="Match state simulation">
               <button type="button" class="tab-btn active" id="state-live" onclick="setMatchState('live')">
-                <span class="state-dot" style="background: var(--live)"></span> Live (45s)
+                Live (45s)
               </button>
               <button type="button" class="tab-btn" id="state-today" onclick="setMatchState('today')">
-                <span class="state-dot" style="background: var(--scheduled)"></span> Today (5m)
+                Today (5m)
               </button>
               <button type="button" class="tab-btn" id="state-completed" onclick="setMatchState('completed')">
-                <span class="state-dot" style="background: var(--completed)"></span> Completed (30m)
+                Completed
               </button>
               <button type="button" class="tab-btn" id="state-delayed" onclick="setMatchState('delayed')">
-                <span class="state-dot" style="background: var(--scheduled)"></span> Offline / Stale-Safe
+                Stale-Safe
               </button>
             </div>
           </div>
 
           <div class="desktop-stage">
-            <div class="desktop-code-bg" aria-hidden="true">
-              <div># Work uninterrupted while PAK Cricket stays pinned on top without stealing focus</div>
-              <div>def refresh_snapshot(service):</div>
-              <div>&nbsp;&nbsp;&nbsp;&nbsp;snapshot = service.snapshot()</div>
-              <div>&nbsp;&nbsp;&nbsp;&nbsp;# Commits atomically; network hiccups never erase your last live score</div>
-              <div>&nbsp;&nbsp;&nbsp;&nbsp;return snapshot["matches"]</div>
-            </div>
-
             <!-- Windows Preview Mode -->
             <div id="preview-win">
               <div class="win-floating-bar">
-                <span class="win-status" id="win-bar-status" style="color: #ef6262;">● LIVE</span>
+                <span class="win-status" id="win-bar-status">● LIVE</span>
                 <span class="win-score-text" id="win-bar-text">PAK 186/4 (18.4)  ·  AUS 182/7 (20)</span>
-                <button type="button" class="win-btn win-btn-update" id="win-update-badge" onclick="toggleDetailsPopup()" title="Portable Windows updater badge">Update available</button>
+                <button type="button" class="win-btn win-btn-update" id="win-update-badge" onclick="toggleDetailsPopup()">Update</button>
                 <button type="button" class="win-btn" id="win-details-btn" onclick="toggleDetailsPopup()">Details ▾</button>
               </div>
 
@@ -1080,7 +900,7 @@
                 </div>
 
                 <div class="win-match-card">
-                  <div class="win-card-state" id="win-card1-state" style="color: #ef6262;">LIVE</div>
+                  <div class="win-card-state" id="win-card1-state">LIVE</div>
                   <div class="win-card-teams" id="win-card1-teams">Pakistan vs Australia</div>
                   <div class="win-card-series" id="win-card1-series">Pakistan T20I Tri-Series</div>
                   <div id="win-card1-scores">
@@ -1090,15 +910,8 @@
                   <div class="win-card-status" id="win-card1-status">Pakistan need 11 runs in 8 balls</div>
                   <div class="win-card-actions">
                     <button type="button" class="win-btn" id="pin-btn-1" onclick="togglePin()">Unpin from bar</button>
-                    <a href="https://www.cricbuzz.com/cricket-match/live-scores" target="_blank" rel="noopener" class="win-btn">Open on Cricbuzz</a>
+                    <a href="https://www.cricbuzz.com/cricket-match/live-scores" target="_blank" rel="noopener" class="win-btn">Cricbuzz ↗</a>
                   </div>
-                </div>
-
-                <div class="win-match-card" style="margin-bottom: 0;">
-                  <div class="win-card-state" style="color: #f0b95c;">TODAY</div>
-                  <div class="win-card-teams">Lahore Qalandars vs Karachi Kings</div>
-                  <div class="win-card-series">Pakistan Super League</div>
-                  <div class="win-card-status">Starts Today, 20:00 PKT</div>
                 </div>
               </div>
             </div>
@@ -1108,136 +921,97 @@
               <div class="mac-menubar">
                 <div class="mac-menubar-left">
                   <span></span>
-                  <strong>VS Code</strong>
+                  <strong>Code</strong>
                   <span>File</span>
                   <span>Edit</span>
-                  <span>Selection</span>
                   <span>View</span>
                 </div>
-                <div class="mac-menubar-right">
+                <div>
                   <span class="mac-widget-pill" id="mac-bar-title">LIVE · PAK 186/4 (18.4) · AUS 182/7 (20)</span>
-                  <span>Wi-Fi</span>
-                  <span>100%</span>
                 </div>
               </div>
 
               <div class="mac-dropdown">
-                <div class="mac-menu-item muted" id="mac-menu-state">LIVE</div>
-                <div class="mac-menu-item muted" id="mac-menu-fresh">Updated 12s ago</div>
+                <div class="mac-menu-item muted" id="mac-menu-state">LIVE · Updated 12s ago</div>
                 <div class="mac-divider"></div>
-                <div class="mac-menu-item" style="font-weight: 600;">✓ <span id="mac-menu-teams">Pakistan vs Australia</span></div>
-                <div class="mac-menu-item muted" id="mac-menu-score1">&nbsp;&nbsp;PAK 186/4 &nbsp;18.4 overs</div>
-                <div class="mac-menu-item muted" id="mac-menu-score2">&nbsp;&nbsp;AUS 182/7 &nbsp;20 overs</div>
+                <div class="mac-menu-item"><strong>✓ Pakistan vs Australia</strong></div>
+                <div class="mac-menu-item muted" id="mac-menu-score1">&nbsp;&nbsp;PAK 186/4 (18.4 ov)</div>
+                <div class="mac-menu-item muted" id="mac-menu-score2">&nbsp;&nbsp;AUS 182/7 (20 ov)</div>
                 <div class="mac-menu-item muted" id="mac-menu-status">Pakistan need 11 runs in 8 balls</div>
-                <div class="mac-menu-item muted">Pakistan T20I Tri-Series</div>
                 <div class="mac-divider"></div>
-                <div class="mac-menu-item"><span>&nbsp;&nbsp;</span><span>Lahore Qalandars vs Karachi Kings</span></div>
-                <div class="mac-menu-item muted">Starts Today, 20:00 PKT</div>
-                <div class="mac-divider"></div>
-                <div class="mac-menu-item action" onclick="setMatchState('live')">Refresh now</div>
-                <a href="https://www.cricbuzz.com/cricket-match/live-scores" target="_blank" rel="noopener" class="mac-menu-item action">Open on Cricbuzz</a>
-                <div class="mac-divider"></div>
-                <div class="mac-menu-item action">Check for updates</div>
-                <div class="mac-menu-item action">Quit</div>
+                <div class="mac-menu-item muted">Refresh now</div>
+                <div class="mac-menu-item muted">Open on Cricbuzz</div>
+                <div class="mac-menu-item muted">Quit</div>
               </div>
             </div>
 
             <div class="stage-caption">
-              <span>💡 <strong>Interactive preview:</strong> Switch between Windows &amp; macOS or test match states above.</span>
-              <span>Colors &amp; layout match <code>main.py</code> (`#121a24` dark slate &amp; `#64d4a4` emerald)</span>
+              <span>Interactive UI replica</span>
+              <span>Click tabs above to preview states</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ── Key Features ── -->
+    <!-- ── Key Highlights (Concise & Keyword-Focused) ── -->
     <section id="features">
       <div class="container">
         <div class="section-header">
-          <span class="section-eyebrow">Engineered for Reliability</span>
-          <h2 class="section-title">Why PAK Cricket?</h2>
+          <h2 class="section-title">Built for Focus.</h2>
           <p class="section-desc">
-            Designed from the ground up to stay out of your way while never missing a ball during Pakistan internationals or the PSL.
+            Essential match data without distractions.
           </p>
         </div>
 
         <div class="feature-grid">
           <article class="feature-card">
-            <div class="feature-icon">🇵🇰</div>
+            <span class="feature-tag">Filtered</span>
             <h3>Pakistan &amp; PSL Only</h3>
             <p>
-              Automatically filters for Pakistan international fixtures (Men, Women, U19, Shaheens/A) and all Pakistan Super League franchises — zero clutter from unrelated leagues.
+              Tracks <strong>Men, Women, U19, Shaheens</strong>, and all <strong>PSL franchises</strong>. Zero unrelated clutter.
             </p>
           </article>
 
           <article class="feature-card">
-            <div class="feature-icon">📌</div>
-            <h3>Sticky Bar Without Focus Theft</h3>
+            <span class="feature-tag">Non-Intrusive</span>
+            <h3>Always On Top, Zero Focus Theft</h3>
             <p>
-              On Windows, a dedicated Win32 visibility watchdog restores the floating bar and keeps it on top using <code>SW_SHOWNOACTIVATE</code> so it never interrupts your typing or coding.
+              Stays visible via <strong>Win32 no-activate</strong> restoration without ever interrupting your typing.
             </p>
           </article>
 
           <article class="feature-card">
-            <div class="feature-icon">🛡️</div>
-            <h3>Stale-Safe Atomic Snapshots</h3>
+            <span class="feature-tag">Resilient</span>
+            <h3>Stale-Safe Score Snapshots</h3>
             <p>
-              Network hiccup during a tense chase? Failed refreshes or missing live scores never wipe your screen. The widget retains the last verified score and clearly shows its age.
+              Network drop? <strong>Never erases your screen</strong>—keeps the last verified score and shows its age.
             </p>
           </article>
 
           <article class="feature-card">
-            <div class="feature-icon">🔍</div>
-            <h3>Layered Cricbuzz Parser</h3>
+            <span class="feature-tag">Smart Polling</span>
+            <h3>Adaptive Refresh Intervals</h3>
             <p>
-              Decodes embedded JSON and Next.js flight streams first, falling back to match-ID-scoped HTML and JSON-LD metadata. Normalizes cricket ball notation (<code>19.6 → 20</code>) and validates wickets.
+              Refreshes every <strong>45s when live</strong>, <strong>5m</strong> on match day, and <strong>30m</strong> when idle.
             </p>
           </article>
 
           <article class="feature-card">
-            <div class="feature-icon">🔄</div>
-            <h3>Verified Portable Updater</h3>
+            <span class="feature-tag">Self-Updating</span>
+            <h3>SHA-256 Portable Updater</h3>
             <p>
-              Checks GitHub Releases every 6 hours. On Windows, clicking <strong>Update</strong> streams the ZIP, verifies its SHA-256 digest, backs up the old <code>.exe</code>, and rolls back automatically if startup fails.
+              One-click Windows updates with <strong>digest verification</strong>, backup, and <strong>automatic rollback</strong>.
             </p>
           </article>
 
           <article class="feature-card">
-            <div class="feature-icon">🕵️</div>
-            <h3>Zero Telemetry &amp; API-Key-Free</h3>
+            <span class="feature-tag">Private</span>
+            <h3>No Keys. No Tracking.</h3>
             <p>
-              No sign-ups, no paid cricket API keys, no background services, and zero user analytics or installation tracking. Preferences live locally on your machine.
+              <strong>Zero telemetry</strong>, no sign-ups, and no paid API keys. Settings stay local on your PC or Mac.
             </p>
           </article>
-        </div>
-
-        <!-- Data Flow Strip -->
-        <div class="pipeline-box">
-          <span class="section-eyebrow">Under the Hood</span>
-          <h3 style="font-size: 1.3rem; font-weight: 700;">How the Score Engine Works</h3>
-          <div class="pipeline-steps">
-            <div class="pipeline-step">
-              <div class="pipeline-step-num">01 / CONCURRENT FETCH</div>
-              <h4>Live, Recent &amp; Upcoming</h4>
-              <p>Polls every <strong>45s</strong> when a match is live, <strong>5m</strong> when scheduled today, and <strong>30m</strong> when idle.</p>
-            </div>
-            <div class="pipeline-step">
-              <div class="pipeline-step-num">02 / PURE PARSER</div>
-              <h4>Embedded + Scoped HTML</h4>
-              <p>Extracts structured match records without ever executing page scripts, validating runs, wickets, and overs.</p>
-            </div>
-            <div class="pipeline-step">
-              <div class="pipeline-step-num">03 / SMART PRIORITIZATION</div>
-              <h4>Live → Today → Recent</h4>
-              <p>Deduplicates by match ID and orders live matches first, upcoming fixtures next, and up to 3 recent results.</p>
-            </div>
-            <div class="pipeline-step">
-              <div class="pipeline-step-num">04 / THREAD-SAFE UI</div>
-              <h4>Non-Blocking Desktop UI</h4>
-              <p>Delivers deep-copied atomic snapshots to Tkinter/pystray on Windows or rumps on macOS.</p>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -1246,10 +1020,9 @@
     <section id="download">
       <div class="container">
         <div class="section-header">
-          <span class="section-eyebrow">Free Download · GitHub Releases</span>
-          <h2 class="section-title">Choose Your Platform</h2>
+          <h2 class="section-title">Unzip and Run.</h2>
           <p class="section-desc">
-            Hosted directly on GitHub Releases with SHA-256 checksums. No Python installation required to run the packaged apps.
+            No installer, admin rights, or Python setup required.
           </p>
         </div>
 
@@ -1258,29 +1031,23 @@
           <div class="platform-card" id="card-win">
             <div>
               <div class="platform-header">
-                <div class="platform-title">
-                  <span>🪟 Windows</span>
-                </div>
+                <div class="platform-title">Windows</div>
                 <span class="os-badge" id="badge-win">Windows 10 / 11</span>
               </div>
 
-              <div class="steps-box">
-                1. Download <code>PakCricket-Windows.zip</code><br />
-                2. Unzip anywhere (Desktop, <code>C:\Apps\PakCricket\</code>)<br />
-                3. Double-click <code>PakCricket.exe</code> — no installer or admin rights needed!
+              <div class="steps-line">
+                Unzip <strong>PakCricket-Windows.zip</strong> → Run <strong>PakCricket.exe</strong>
               </div>
 
               <ul class="platform-list">
-                <li>Draggable floating score bar with customizable text size</li>
-                <li>System tray icon with color-coded match state indicator</li>
-                <li>Resizable <strong>Match Details</strong> popup with match pinning</li>
-                <li>Saved position, visibility, and always-on-top preferences</li>
-                <li>One-click verified in-app portable updates with automatic rollback</li>
+                <li><strong>Floating score bar</strong> + system tray icon</li>
+                <li><strong>Pin any match</strong> &amp; resize text on the fly</li>
+                <li><strong>One-click in-app updates</strong> with rollback protection</li>
               </ul>
             </div>
 
-            <a href="https://github.com/mabs7/cricket-tray/releases/latest/download/PakCricket-Windows.zip" class="btn btn-primary" style="justify-content: center; width: 100%;">
-              <span>Download PakCricket-Windows.zip</span>
+            <a href="https://github.com/mabs7/cricket-tray/releases/latest/download/PakCricket-Windows.zip" class="btn btn-win" style="justify-content: center; width: 100%;">
+              <span>Download for Windows (.zip)</span>
             </a>
           </div>
 
@@ -1288,82 +1055,56 @@
           <div class="platform-card" id="card-mac">
             <div>
               <div class="platform-header">
-                <div class="platform-title">
-                  <span>🍎 macOS</span>
-                </div>
+                <div class="platform-title">macOS</div>
                 <span class="os-badge" id="badge-mac">macOS Menu Bar</span>
               </div>
 
-              <div class="steps-box">
-                1. Download <code>PakCricket-Mac.zip</code><br />
-                2. Unzip the archive<br />
-                3. Double-click <code>PakCricket.app</code> — score appears in your top-right menu bar!
+              <div class="steps-line">
+                Unzip <strong>PakCricket-Mac.zip</strong> → Open <strong>PakCricket.app</strong>
               </div>
 
               <ul class="platform-list">
-                <li>Live status &amp; score rendered directly in the macOS menu bar</li>
-                <li>Dropdown menu with full innings breakdown, overs &amp; series name</li>
-                <li>Click any match in the dropdown to pin it to the menu bar</li>
-                <li>Instant manual refresh &amp; direct Cricbuzz scorecard launch</li>
-                <li>Native macOS notification when a new release is published</li>
+                <li><strong>Live menu bar ticker</strong> with full innings dropdown</li>
+                <li><strong>Click to pin</strong> any active or upcoming match</li>
+                <li><strong>Release notifications</strong> when updates ship</li>
               </ul>
             </div>
 
-            <a href="https://github.com/mabs7/cricket-tray/releases/latest/download/PakCricket-Mac.zip" class="btn btn-secondary" style="justify-content: center; width: 100%;">
-              <span>Download PakCricket-Mac.zip</span>
+            <a href="https://github.com/mabs7/cricket-tray/releases/latest/download/PakCricket-Mac.zip" class="btn btn-mac" style="justify-content: center; width: 100%;">
+              <span>Download for macOS (.zip)</span>
             </a>
           </div>
         </div>
-
-        <p style="text-align: center; margin-top: 22px; color: var(--muted); font-size: 0.88rem;">
-          Prefer running from source with Python 3.11+? Check the
-          <a href="https://github.com/mabs7/cricket-tray#run-from-source-developers" target="_blank" rel="noopener" style="color: var(--green); text-decoration: underline;">Developer Setup Guide</a>
-          or browse all versions on
-          <a href="https://github.com/mabs7/cricket-tray/releases" target="_blank" rel="noopener" style="color: var(--green); text-decoration: underline;">GitHub Releases</a>.
-        </p>
       </div>
     </section>
 
     <!-- ── About the Developer ── -->
     <section id="developer">
       <div class="container">
-        <div class="section-header">
-          <span class="section-eyebrow">Behind the Project</span>
-          <h2 class="section-title">Meet the Developer</h2>
-        </div>
-
         <div class="dev-card">
           <div class="dev-top">
             <div class="dev-avatar" aria-hidden="true">MA</div>
             <div class="dev-identity">
               <h3>Muhammad Abubakar</h3>
-              <div class="dev-handle">@mabs7</div>
-              <div class="dev-role">Software Developer &amp; Builder · Crafting lightweight desktop tools &amp; open-source utilities for real-world problems</div>
+              <div class="dev-handle">@mabs7 · Software Developer</div>
             </div>
           </div>
 
-          <div class="dev-bio">
-            <p>
-              Hi! I'm <strong>Muhammad Abubakar</strong>. I built <strong>PAK Cricket</strong> out of a simple everyday frustration: wanting to follow Pakistan international matches and the PSL while working, without keeping heavy browser tabs open, dealing with ad-cluttered scoreboards, or paying for commercial sports APIs.
-            </p>
-            <p>
-              My focus as a developer is building fast, practical, and privacy-respecting software that solves real problems cleanly — from resilient data parsing and cross-platform desktop UX to self-verifying portable update systems. PAK Cricket is 100% open source so the community can inspect how it works, contribute improvements, and keep it running for every match season.
-            </p>
-          </div>
+          <p class="dev-bio">
+            Built to follow <strong>Pakistan &amp; PSL cricket</strong> while coding—without heavy browser tabs, ad-cluttered scoreboards, or paid API keys. <strong>Fast, portable, and 100% open source.</strong>
+          </p>
 
           <div class="dev-links">
-            <a href="https://abubakar144-portfolio.netlify.app" target="_blank" rel="noopener" class="btn btn-primary">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              <span>Visit My Portfolio</span>
+            <a href="https://abubakar144-portfolio.netlify.app" target="_blank" rel="noopener" class="btn btn-win">
+              <span>Visit Portfolio ↗</span>
             </a>
 
-            <a href="https://github.com/mabs7" target="_blank" rel="noopener" class="btn btn-secondary">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11.05 11.05 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+            <a href="https://github.com/mabs7" target="_blank" rel="noopener" class="btn btn-mac">
               <span>GitHub (@mabs7)</span>
             </a>
 
-            <a href="https://github.com/mabs7/cricket-tray" target="_blank" rel="noopener" class="btn btn-secondary">
-              <span>⭐ Star cricket-tray on GitHub</span>
+            <a href="https://github.com/mabs7/cricket-tray" target="_blank" rel="noopener" class="btn btn-neutral">
+              <span>Source Code</span>
             </a>
           </div>
         </div>
@@ -1375,81 +1116,67 @@
   <footer>
     <div class="container footer-inner">
       <div>
-        Built with ❤️ for Pakistan cricket fans by <a href="https://abubakar144-portfolio.netlify.app" target="_blank" rel="noopener" style="color: var(--fg); font-weight: 600;">Muhammad Abubakar</a>.
+        PAK Cricket · Built by <a href="https://abubakar144-portfolio.netlify.app" target="_blank" rel="noopener"><strong>Muhammad Abubakar</strong></a>
       </div>
       <div class="footer-links">
         <a href="https://abubakar144-portfolio.netlify.app" target="_blank" rel="noopener">Portfolio</a>
-        <a href="https://github.com/mabs7/cricket-tray" target="_blank" rel="noopener">Source Code</a>
-        <a href="https://github.com/mabs7/cricket-tray/releases/latest" target="_blank" rel="noopener">Latest Release</a>
-        <a href="https://github.com/mabs7/cricket-tray/issues" target="_blank" rel="noopener">Report an Issue</a>
+        <a href="https://github.com/mabs7/cricket-tray" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/mabs7/cricket-tray/releases/latest" target="_blank" rel="noopener">Releases</a>
       </div>
     </div>
   </footer>
 
   <script>
-    // Interactive state data matching main.py & scores.py contracts
     const STATES = {
       live: {
         label: "LIVE",
-        color: "#ef6262",
         barText: "PAK 186/4 (18.4)  ·  AUS 182/7 (20)",
         freshness: "Updated 12s ago",
-        freshColor: "#a6b5c7",
         cardState: "LIVE",
-        cardColor: "#ef6262",
         scoresHtml:
           '<div class="win-card-score-row">PAK &nbsp;&nbsp;&nbsp;186/4 &nbsp;&nbsp;&nbsp;18.4 overs</div>' +
           '<div class="win-card-score-row">AUS &nbsp;&nbsp;&nbsp;182/7 &nbsp;&nbsp;&nbsp;20 overs</div>',
         status: "Pakistan need 11 runs in 8 balls",
         macTitle: "LIVE · PAK 186/4 (18.4) · AUS 182/7 (20)",
-        macScore1: "  PAK 186/4  18.4 overs",
-        macScore2: "  AUS 182/7  20 overs"
+        macScore1: "  PAK 186/4 (18.4 ov)",
+        macScore2: "  AUS 182/7 (20 ov)"
       },
       today: {
         label: "TODAY",
-        color: "#f0b95c",
         barText: "Pakistan vs Australia · 19:30",
         freshness: "Updated 2m ago",
-        freshColor: "#a6b5c7",
         cardState: "TODAY",
-        cardColor: "#f0b95c",
         scoresHtml: "",
         status: "Starts Today, 19:30 PKT · Toss at 19:00",
         macTitle: "TODAY · Pakistan vs Australia · 19:30",
-        macScore1: "  Toss scheduled at 19:00 PKT",
+        macScore1: "  Toss at 19:00 PKT",
         macScore2: "  Gaddafi Stadium, Lahore"
       },
       completed: {
         label: "COMPLETED",
-        color: "#92a3b8",
         barText: "PAK 198/5 (19.2)  ·  AUS 194/6 (20)",
         freshness: "Updated 8m ago",
-        freshColor: "#a6b5c7",
         cardState: "COMPLETED",
-        cardColor: "#92a3b8",
         scoresHtml:
           '<div class="win-card-score-row">PAK &nbsp;&nbsp;&nbsp;198/5 &nbsp;&nbsp;&nbsp;19.2 overs</div>' +
           '<div class="win-card-score-row">AUS &nbsp;&nbsp;&nbsp;194/6 &nbsp;&nbsp;&nbsp;20 overs</div>',
         status: "Pakistan won by 5 wickets",
         macTitle: "COMPLETED · PAK 198/5 (19.2) · AUS 194/6 (20)",
-        macScore1: "  PAK 198/5  19.2 overs",
-        macScore2: "  AUS 194/6  20 overs"
+        macScore1: "  PAK 198/5 (19.2 ov)",
+        macScore2: "  AUS 194/6 (20 ov)"
       },
       delayed: {
         label: "DELAYED",
-        color: "#f0b95c",
         barText: "PAK 186/4 (18.4)  ·  AUS 182/7 (20)",
-        freshness: "Updates delayed · last success 1m 15s ago",
-        freshColor: "#f0b95c",
-        cardState: "LIVE",
-        cardColor: "#ef6262",
+        freshness: "Updates delayed · last 1m 15s ago",
+        cardState: "LIVE · STALE-SAFE",
         scoresHtml:
           '<div class="win-card-score-row">PAK &nbsp;&nbsp;&nbsp;186/4 &nbsp;&nbsp;&nbsp;18.4 overs</div>' +
           '<div class="win-card-score-row">AUS &nbsp;&nbsp;&nbsp;182/7 &nbsp;&nbsp;&nbsp;20 overs</div>',
-        status: "Pakistan need 11 runs in 8 balls (Stale-safe snapshot retained)",
+        status: "Pakistan need 11 runs in 8 balls (Snapshot retained)",
         macTitle: "⚠ LIVE · PAK 186/4 (18.4) · AUS 182/7 (20)",
-        macScore1: "  PAK 186/4  18.4 overs",
-        macScore2: "  AUS 182/7  20 overs"
+        macScore1: "  PAK 186/4 (18.4 ov)",
+        macScore2: "  AUS 182/7 (20 ov)"
       }
     };
 
@@ -1467,24 +1194,15 @@
         document.getElementById("state-" + id).classList.toggle("active", id === key);
       });
 
-      const winStatus = document.getElementById("win-bar-status");
-      winStatus.textContent = "● " + s.label;
-      winStatus.style.color = s.color;
+      document.getElementById("win-bar-status").textContent = "● " + s.label;
       document.getElementById("win-bar-text").textContent = s.barText;
-
-      const fresh = document.getElementById("win-popup-fresh");
-      fresh.textContent = s.freshness;
-      fresh.style.color = s.freshColor;
-
-      const cardState = document.getElementById("win-card1-state");
-      cardState.textContent = s.cardState;
-      cardState.style.color = s.cardColor;
+      document.getElementById("win-popup-fresh").textContent = s.freshness;
+      document.getElementById("win-card1-state").textContent = s.cardState;
       document.getElementById("win-card1-scores").innerHTML = s.scoresHtml;
       document.getElementById("win-card1-status").textContent = s.status;
 
       document.getElementById("mac-bar-title").textContent = s.macTitle;
-      document.getElementById("mac-menu-state").textContent = s.cardState;
-      document.getElementById("mac-menu-fresh").textContent = s.freshness;
+      document.getElementById("mac-menu-state").textContent = s.cardState + " · " + s.freshness;
       document.getElementById("mac-menu-score1").textContent = s.macScore1;
       document.getElementById("mac-menu-score2").textContent = s.macScore2;
       document.getElementById("mac-menu-status").textContent = s.status;
@@ -1504,24 +1222,20 @@
       document.getElementById("pin-btn-1").textContent = pinned ? "Unpin from bar" : "Pin to bar";
     }
 
-    // Highlight visitor's OS card and default preview tab
     (function detectOS() {
       const ua = navigator.userAgent || "";
       const isMac = /Macintosh|Mac OS X/i.test(ua);
       if (isMac) {
-        document.getElementById("card-mac").classList.add("highlighted");
         const badge = document.getElementById("badge-mac");
         badge.textContent = "Detected for your Mac";
         badge.classList.add("detected");
       } else {
-        document.getElementById("card-win").classList.add("highlighted");
         const badge = document.getElementById("badge-win");
-        badge.textContent = "Recommended for your PC";
+        badge.textContent = "Detected for your PC";
         badge.classList.add("detected");
       }
     })();
 
-    // Fetch latest release tag & asset sizes from GitHub API (graceful fallback to v2.8.0)
     (async function fetchLatestRelease() {
       try {
         const res = await fetch("https://api.github.com/repos/mabs7/cricket-tray/releases/latest");
@@ -1535,18 +1249,15 @@
           const macAsset = data.assets.find(a => a.name === "PakCricket-Mac.zip" || a.name === "PakCricket.zip");
           if (winAsset && winAsset.size) {
             const mb = (winAsset.size / (1024 * 1024)).toFixed(1);
-            document.getElementById("win-sub-label").textContent = `Portable .exe (${mb} MB ZIP · ${data.tag_name})`;
+            document.getElementById("win-sub-label").textContent = `Portable .exe · ${mb} MB`;
           }
           if (macAsset && macAsset.size) {
             const mb = (macAsset.size / (1024 * 1024)).toFixed(1);
-            document.getElementById("mac-sub-label").textContent = `Menu Bar .app (${mb} MB ZIP · ${data.tag_name})`;
+            document.getElementById("mac-sub-label").textContent = `Menu Bar .app · ${mb} MB`;
           }
         }
-      } catch (_) {
-        // Keep static defaults if offline or rate-limited
-      }
+      } catch (_) {}
     })();
   </script>
 </body>
 </html>
-
