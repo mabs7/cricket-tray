@@ -7,14 +7,15 @@ see [AGENTS.md](AGENTS.md) for session instructions and
 ## Baseline and current work
 
 - Repository: [mabs7/cricket-tray](https://github.com/mabs7/cricket-tray), branch
-  `main`. Application version: **v2.8.0**, commit `4cf12dc`.
+  `main`. Application version: **v2.8.0**, commit `aba06e0`.
 - Added a static GitHub Pages showcase and download landing page in
   [docs/index.html](docs/index.html) (with [docs/.nojekyll](docs/.nojekyll)) on
   macOS (`3de9eab`), refined it on Windows (`4cf12dc`) into a minimalist design
   with prominent keyword-focused copy and distinct hover glows on both download
   buttons, and added Google Search indexing/SEO assets ([docs/sitemap.xml](docs/sitemap.xml),
-  [docs/robots.txt](docs/robots.txt), canonical URL, and `SoftwareApplication`
-  JSON-LD structured data in `docs/index.html`).
+  [docs/robots.txt](docs/robots.txt), canonical URL, `SoftwareApplication`
+  JSON-LD structured data, and the `google-site-verification` meta tag in
+  `docs/index.html`).
 - Existing Python application code, tests, version, and CI workflow are unchanged.
   These SEO/indexing files are committed and pushed to `main`; no new application
   release tag is created. Verify `git status --short --branch` and `git log -1`
