@@ -27,6 +27,7 @@ key, or analytics service. Preferences/logs are local, not synchronized via Git.
 | `version.py` | Source of truth for current version and GitHub repository identity. |
 | `download_counts.py` | Maintainer-only GitHub release download report, paginated and grouped by platform/version; not called by the widget. |
 | `create_icon.py` | Generate Windows ICO or macOS ICNS before packaging. |
+| `docs/index.html` | Static GitHub Pages showcase and download landing page linking directly to GitHub Release assets (`PakCricket-Windows.zip` and `PakCricket-Mac.zip`) and the developer's portfolio. |
 
 Data flow: Cricbuzz HTML -> `parse_page` -> match dictionaries -> filtering and
 selection -> atomic `ScoreService` snapshot -> platform UI. Scraped data is never
