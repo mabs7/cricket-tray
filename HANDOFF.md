@@ -7,7 +7,9 @@ see [AGENTS.md](AGENTS.md) for session instructions and
 ## Baseline and current work
 
 - Repository: [mabs7/cricket-tray](https://github.com/mabs7/cricket-tray), branch
-  `main`. Application version: **v2.9.1** (following `e3608d6` / unpublished `v2.9.0` tag).
+  `main`. Published application version: **v2.9.1** (`3abd81d`, released
+  2026-11-13 following unpublished `v2.9.0` tag `e3608d6`). Latest docs/website
+  commit: `8712b08`.
 - **Completed in recent sessions (2026-11-11 to 2026-11-13, Windows):**
   1. **Stumps / Session-Break State (`paused` + `phase`):** Fixed the issue where
      a Test match stopped for the day at Stumps (or a match at Lunch, Tea, Dinner,
@@ -82,12 +84,21 @@ see [AGENTS.md](AGENTS.md) for session instructions and
        wrapped filter pills and badge-first card headers, precision-touchpad scroll
        handling, font caching, macOS `menu_key` caching (avoiding 2s menu rebuilds),
        and empty-overs formatting fixes.
-- Preparing release **v2.9.1** on `main`: `v2.9.0` (`e3608d6`) passed `build-windows`
-  in CI (`43378658222`), while `build-mac` failed in `test_locked_desktop_access_denied_does_not_raise`
-  because `patch("window_visibility.ctypes.get_last_error", ...)` lacked `create=True`
-  on POSIX/macOS. Fixed `tests/test_updates.py` and bumped to **v2.9.1** without moving
-  the `v2.9.0` tag. Note: the local `dist/PakCricket.exe` (`11:14 AM`) was verified
-  in-place by the owner before tagging.
+  6. **GitHub Pages Website Update, Social Cards & UX Overhaul (`docs/`, `7432365` & `8712b08`):**
+     - Updated [docs/index.html](docs/index.html) and [docs/sitemap.xml](docs/sitemap.xml)
+       for **v2.9.1** features (12 teams, international + 6 major leagues, session-break
+       states, Windows Match Center and macOS feed toggles).
+     - Added hosted visual and icon assets: [docs/og-preview.png](docs/og-preview.png)
+       (`1200×630` RGB PNG), [docs/favicon.svg](docs/favicon.svg),
+       [docs/favicon-48x48.png](docs/favicon-48x48.png), and
+       [docs/apple-touch-icon.png](docs/apple-touch-icon.png), wired with Open Graph
+       (`og:image`, dimensions, alt) and `twitter:card="summary_large_image"` tags.
+     - Fixed interactive preview math (`PAK 172/4 (18.4)` vs `AUS 196/7 (20)`), added
+       `Matches (2) ▾`, `Change Team ▾` 6-team picker, category filters, `◀`/`▶`
+       strip cycling, macOS `Feed: International & Leagues` / `Feed: Pick a Team ▸`
+       toggles, responsive mobile breakpoints (`<= 780px`, `<= 720px`, `<= 560px`),
+       `:focus-visible`/ARIA/reduced-motion accessibility, `#faq` section, and
+       updated `SoftwareApplication` + `FAQPage` JSON-LD.
 
 ## Recent implementation history
 
@@ -97,10 +108,24 @@ see [AGENTS.md](AGENTS.md) for session instructions and
 | `36846c2` / v2.8.0 (2026-10-09) | Windows visibility watchdog and callback recovery; local logging; periodic update checks and visible notifications; portable Windows download/verify/replace/restart with backup/rollback; maintainer download-count report; Windows smoke checks added to release CI. |
 | `542692f` (2026-10-30) | Added AGENTS.md, PROJECT_CONTEXT.md, and HANDOFF.md persistent repository context. |
 | `0c975b1` (2026-11-03) | Added minimalist GitHub Pages landing page (`docs/index.html`), `sitemap.xml`, `robots.txt`, JSON-LD metadata, and Google Search Console verification tag. |
+| `3abd81d` / v2.9.1 (2026-11-13) | Expanded coverage to senior internationals + 6 major leagues, added Stumps/break states, Match Center selection, 12-team selector, hardening pass, and fixed macOS ctypes test mock for release (`v2.9.0` superseded by `v2.9.1`). |
+| `8712b08` (2026-11-13) | Updated GitHub Pages site for `v2.9.1`, added hosted `og-preview.png` (`summary_large_image`) and favicons, fixed preview cricket math, added interactive team/feed previews, mobile layout, ARIA/focus accessibility, and `#faq`. |
 
 ## Validation and external status
 
-- **Current session, 2026-11-13 (Windows):**
+- **Website & Release Verification, 2026-11-13 (Windows / Live):**
+  - GitHub release API (`/releases/latest`) verified **v2.9.1** published at
+    `2026-11-13T06:32:43Z` with `PakCricket-Windows.zip` (`25,176,709` bytes) and
+    `PakCricket-Mac.zip` (`22,966,995` bytes).
+  - Offline validation on `docs/` (`8712b08`): HTML tag balance (`52` static IDs),
+    all `36` JS `getElementById` references matched, JSON-LD and `docs/sitemap.xml`
+    parsed, `node --check` passed on inline script, and `git diff --check` passed.
+  - Live GitHub Pages check (`Twitterbot/1.0`): `https://mabs7.github.io/cricket-tray/`
+    returned `HTTP 200 OK` (no redirect) with `twitter:card="summary_large_image"`,
+    `og:image`/`twitter:image` pointing to `og-preview.png`; `og-preview.png`
+    returned `HTTP 200 OK` (`image/png`, `1200×630` RGB, `72,959` bytes);
+    `/cricket-tray` (no trailing slash) returned `301` to `/cricket-tray/`.
+- **Application Validation, 2026-11-13 (Windows, v2.9.1):**
   - `.venv\Scripts\python.exe -m unittest discover -s tests -v`: **41 offline tests passed**
     after final `v2.9.1` release edits (and verified under simulated `sys.platform='darwin'`
     with `ctypes.WinDLL`/`get_last_error` removed).
@@ -112,9 +137,8 @@ see [AGENTS.md](AGENTS.md) for session instructions and
   - Live Windows packaged widget verification (`dist/PakCricket.exe`, `11:14 AM` build):
     verified by owner on desktop showing `Bad Light` interruption state.
   - `.venv\Scripts\python.exe tests\packaged_update_smoke.py`: **passed** earlier
-    against the `10:32:55 AM` `dist/PakCricket.exe` build (the `11:14 AM` smoke run
-    was canceled when interrupted; GitHub Actions `build-windows` re-runs
-    `packaged_update_smoke.py` on the `v2.9.0` artifact).
+    against the `10:32:55 AM` `dist/PakCricket.exe` build; `v2.9.1` GitHub
+    Actions CI subsequently built and published both platform assets.
   - `git diff --check`: **passed**.
 - **Earlier live diagnostic, 2026-11-11 (Windows, prior to `scope`/`team` UI controls):**
   - `python test_scraper.py`: **passed** against live Cricbuzz data; verified
@@ -124,13 +148,17 @@ see [AGENTS.md](AGENTS.md) for session instructions and
 
 ## Unresolved items and next tasks
 
-1. **Verify `v2.9.1` GitHub Actions builds and release assets.** Confirm both
-   `PakCricket-Windows.zip` and `PakCricket-Mac.zip` are published under the `v2.9.1`
-   GitHub release.
-2. **Validate on the MacBook.** Test `PakCricket-Mac.zip` / menu rendering
+1. **Confirm X (Twitter) social preview card cache clearing:** Bare URL
+   `https://mabs7.github.io/cricket-tray/` had been posted on X before `8712b08`,
+   so X cached the pre-update imageless card (up to ~7 days) and still rendered no
+   preview right after push. Test `https://mabs7.github.io/cricket-tray/index.html?v=3`
+   on X (or LinkedIn Post Inspector) to verify card rendering independently of the
+   cached bare URL; if `?v=3` also fails when posted alone without media, revisit
+   `og:url` canonical collapsing or `mabs7.github.io` root `robots.txt`.
+2. **Validate on the MacBook:** Test `PakCricket-Mac.zip` (`v2.9.1`) menu rendering
    (`STUMPS · ...`, `Team` / `International` menu switching, and reduced menu rebuilds)
    on macOS.
-3. **Exercise portable upgrade from `v2.8.0` to `v2.9.1`.** Verify in-app upgrading
+3. **Exercise portable upgrade from `v2.8.0` to `v2.9.1`:** Verify in-app upgrading
    from v2.8.0 to v2.9.1 on Windows.
 4. **Small documentation/maintenance follow-ups:** No LICENSE file is present;
    license choice belongs to the owner.

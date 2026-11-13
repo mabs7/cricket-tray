@@ -29,7 +29,7 @@ local, not synchronized via Git.
 | `version.py` | Source of truth for current version and GitHub repository identity. |
 | `download_counts.py` | Maintainer-only GitHub release download report, paginated and grouped by platform/version; not called by the widget. |
 | `create_icon.py` | Generate Windows ICO or macOS ICNS before packaging. |
-| `docs/` | Static GitHub Pages showcase and download landing page (`index.html`, `sitemap.xml`, `robots.txt`, `.nojekyll`) linking directly to GitHub Release assets (`PakCricket-Windows.zip` and `PakCricket-Mac.zip`) and the developer's portfolio. |
+| `docs/` | Static GitHub Pages showcase and download landing page (`index.html`, `og-preview.png`, `favicon.svg`, `favicon-48x48.png`, `apple-touch-icon.png`, `sitemap.xml`, `robots.txt`, `.nojekyll`) with interactive Windows/macOS `v2.9.1` previews, FAQ, JSON-LD (`SoftwareApplication` + `FAQPage`), Open Graph / Twitter `summary_large_image` social cards, and links to GitHub Release assets (`PakCricket-Windows.zip`, `PakCricket-Mac.zip`) and the developer's portfolio. |
 
 Data flow: Cricbuzz HTML -> `parse_page` -> match dictionaries -> filtering and
 selection -> atomic `ScoreService` snapshot -> platform UI. Scraped data is never
