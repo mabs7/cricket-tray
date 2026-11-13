@@ -7,7 +7,7 @@ see [AGENTS.md](AGENTS.md) for session instructions and
 ## Baseline and current work
 
 - Repository: [mabs7/cricket-tray](https://github.com/mabs7/cricket-tray), branch
-  `main`. Application version: **v2.9.0** (released from commit `0c975b1` baseline).
+  `main`. Application version: **v2.9.1** (following `e3608d6` / unpublished `v2.9.0` tag).
 - **Completed in recent sessions (2026-11-11 to 2026-11-13, Windows):**
   1. **Stumps / Session-Break State (`paused` + `phase`):** Fixed the issue where
      a Test match stopped for the day at Stumps (or a match at Lunch, Tea, Dinner,
@@ -82,10 +82,12 @@ see [AGENTS.md](AGENTS.md) for session instructions and
        wrapped filter pills and badge-first card headers, precision-touchpad scroll
        handling, font caching, macOS `menu_key` caching (avoiding 2s menu rebuilds),
        and empty-overs formatting fixes.
-- Preparing release **v2.9.0** on `main` (updating `version.py`, `release-notes.md`,
-  `readme.md`, and `docs/index.html` fallback metadata; pushing `main` and tag `v2.9.0`
-  to trigger Windows/macOS GitHub Actions builds). Note: the local `dist/PakCricket.exe`
-  was verified in-place on Windows before release tagging (`11:14 AM` build).
+- Preparing release **v2.9.1** on `main`: `v2.9.0` (`e3608d6`) passed `build-windows`
+  in CI (`43378658222`), while `build-mac` failed in `test_locked_desktop_access_denied_does_not_raise`
+  because `patch("window_visibility.ctypes.get_last_error", ...)` lacked `create=True`
+  on POSIX/macOS. Fixed `tests/test_updates.py` and bumped to **v2.9.1** without moving
+  the `v2.9.0` tag. Note: the local `dist/PakCricket.exe` (`11:14 AM`) was verified
+  in-place by the owner before tagging.
 
 ## Recent implementation history
 
@@ -100,15 +102,9 @@ see [AGENTS.md](AGENTS.md) for session instructions and
 
 - **Current session, 2026-11-13 (Windows):**
   - `.venv\Scripts\python.exe -m unittest discover -s tests -v`: **41 offline tests passed**
-    after final `v2.9.0` release edits (including regression coverage for
-    explicit-`null` fields, key-reordered `typeMatches`, chronological `inningsId`
-    ordering + `isDeclared`, active vs rain phrases, `Team` ranking +
-    `matches_category(..., scope=scope)`, `ScoreService.set_filter()`, `scope`/`team`
-    settings validation, `bool`/`str` update asset size rejection, and Win+L
-    `ERROR_ACCESS_DENIED` suppression).
-  - `.venv\Scripts\python.exe tests\ui_smoke.py`: **passed** after final `v2.9.0`
-    edits on Windows (including first-launch `team_picker_open`, `set_feed`,
-    `toggle_team_picker`, `drag_move` safety, and idempotent `quit()`).
+    after final `v2.9.1` release edits (and verified under simulated `sys.platform='darwin'`
+    with `ctypes.WinDLL`/`get_last_error` removed).
+  - `.venv\Scripts\python.exe tests\ui_smoke.py`: **passed** on Windows (`v2.9.1`).
   - `.venv\Scripts\python.exe test_scraper.py`: **passed** against live Cricbuzz
     data (verified `Pakistan vs Sri Lanka` chronological innings + `434/9d` declared
     score, `New Zealand vs India` `Innings Break`, `England vs Australia` live, and
@@ -128,14 +124,14 @@ see [AGENTS.md](AGENTS.md) for session instructions and
 
 ## Unresolved items and next tasks
 
-1. **Verify `v2.9.0` GitHub Actions builds and release assets.** Confirm both
-   `PakCricket-Windows.zip` and `PakCricket-Mac.zip` are published under the `v2.9.0`
+1. **Verify `v2.9.1` GitHub Actions builds and release assets.** Confirm both
+   `PakCricket-Windows.zip` and `PakCricket-Mac.zip` are published under the `v2.9.1`
    GitHub release.
 2. **Validate on the MacBook.** Test `PakCricket-Mac.zip` / menu rendering
    (`STUMPS · ...`, `Team` / `International` menu switching, and reduced menu rebuilds)
    on macOS.
-3. **Exercise portable upgrade from `v2.8.0` to `v2.9.0`.** Verify in-app upgrading
-   from v2.8.0 to v2.9.0 on Windows.
+3. **Exercise portable upgrade from `v2.8.0` to `v2.9.1`.** Verify in-app upgrading
+   from v2.8.0 to v2.9.1 on Windows.
 4. **Small documentation/maintenance follow-ups:** No LICENSE file is present;
    license choice belongs to the owner.
 

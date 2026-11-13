@@ -193,7 +193,7 @@ class VisibilityTests(unittest.TestCase):
         api.IsWindowVisible.return_value = True
         api.IsIconic.return_value = False
         api.SetWindowPos.return_value = 0
-        with patch("window_visibility.sys.platform", "win32"), patch("window_visibility.ctypes.WinDLL", return_value=api, create=True), patch("window_visibility.ctypes.get_last_error", return_value=5):
+        with patch("window_visibility.sys.platform", "win32"), patch("window_visibility.ctypes.WinDLL", return_value=api, create=True), patch("window_visibility.ctypes.get_last_error", return_value=5, create=True):
             ensure_bar_visible(root, hidden=False, topmost=True)
 
 if __name__ == "__main__":

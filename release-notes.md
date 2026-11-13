@@ -1,4 +1,4 @@
-## PAK Cricket v2.9.0
+## PAK Cricket v2.9.1
 
 ### Expanded cricket coverage & team selector
 - Follow **My Team** (Pakistan + PSL, India + IPL, Australia + BBL, England + The Hundred, South Africa + SA20, Bangladesh + BPL, or other Test nations) or switch to **International** mode for senior men's internationals and 6 major leagues (**PSL**, **IPL**, **BPL**, **Big Bash League**, **SA20**, **The Hundred**).
