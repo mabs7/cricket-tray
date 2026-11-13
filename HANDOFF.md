@@ -1,26 +1,91 @@
 # Development handoff
 
-Last reviewed: **2026-11-03** (Asia/Karachi). This is the current-work record;
+Last reviewed: **2026-11-13** (Asia/Karachi). This is the current-work record;
 see [AGENTS.md](AGENTS.md) for session instructions and
 [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) for architecture and decisions.
 
 ## Baseline and current work
 
 - Repository: [mabs7/cricket-tray](https://github.com/mabs7/cricket-tray), branch
-  `main`. Application version: **v2.8.0**, commit `aba06e0`.
-- Added a static GitHub Pages showcase and download landing page in
-  [docs/index.html](docs/index.html) (with [docs/.nojekyll](docs/.nojekyll)) on
-  macOS (`3de9eab`), refined it on Windows (`4cf12dc`) into a minimalist design
-  with prominent keyword-focused copy and distinct hover glows on both download
-  buttons, and added Google Search indexing/SEO assets ([docs/sitemap.xml](docs/sitemap.xml),
-  [docs/robots.txt](docs/robots.txt), canonical URL, `SoftwareApplication`
-  JSON-LD structured data, and the `google-site-verification` meta tag in
-  `docs/index.html`).
-- Existing Python application code, tests, version, and CI workflow are unchanged.
-  These SEO/indexing files are committed and pushed to `main`; no new application
-  release tag is created. Verify `git status --short --branch` and `git log -1`
-  for the actual commit and synchronization state before continuing on another
-  computer.
+  `main`. Application version: **v2.9.0** (released from commit `0c975b1` baseline).
+- **Completed in recent sessions (2026-11-11 to 2026-11-13, Windows):**
+  1. **Stumps / Session-Break State (`paused` + `phase`):** Fixed the issue where
+     a Test match stopped for the day at Stumps (or a match at Lunch, Tea, Dinner,
+     Drinks, Innings Break, Rain Delay, Wet Outfield, or Bad Light) still showed
+     `LIVE`. `scraper.py` now classifies interrupted matches as `state="paused"`
+     with `is_live=False` and extracts a normalized `phase` (`"Stumps"`,
+     `"Lunch"`, `"Tea"`, `"Innings Break"`, `"Rain Delay"`, etc.). Both the
+     Windows floating bar/details cards and the macOS menu bar now display
+     `STUMPS` (or the specific break label) in sky-blue (`#7ec8f8`) instead of
+     red `LIVE`, and `scores.py` polls every 5 minutes at Stumps (or 2 minutes
+     during mid-day breaks) rather than the 45-second active-play interval.
+  2. **Expanded Match Coverage (Internationals + 6 Major Leagues):** Expanded
+     `scraper.py` to extract Cricbuzz's `typeMatches` grouping (`International`,
+     `League`, `Domestic`, `Women`) and updated `filter.py` (`competition()`,
+     `filter_covered_matches()`, `get_match_state()`) to cover:
+     - **Pakistan** fixtures (Men, Women, U19, Shaheens/A, and PSL)
+     - **Senior Men's International** matches (Tests, ODIs, T20Is, ICC events)
+     - **6 Major Franchise Leagues:** **PSL**, **IPL**, **BPL**, **Big Bash League (BBL)**, **SA20**, and **The Hundred**
+     Unrelated domestic competitions (e.g. Sheffield Shield, Ford Trophy, Ranji),
+     T10/regional leagues (e.g. Abu Dhabi T10, Nepal Premier League, CSA T20),
+     legends tournaments, and non-Pakistan women's/youth leagues (e.g. WBBL, WPL)
+     are excluded. Active `live` matches always take precedence over `paused`
+     matches, and within each tier matches are ordered **Pakistan → International → League**.
+  3. **Match Center Selection Mechanism & UI Modernization:**
+     - Added category filter pills (`All`, `Pakistan`, `International`, `PSL`, `IPL`,
+       `BPL`, `BBL`, `SA20`, `The Hundred` via `matches_category()`) in the Match
+       Center popup so the user can view detailed matches by competition while the
+       floating live strip shows only the selected match.
+     - Added immediate one-click match selection (clicking any match card or its
+       `Show on Live Strip` button immediately updates the floating live strip without
+       waiting for the next timer tick), an active-strip header banner (`▸ Pinned to
+       live strip: ...` / `Auto-select top match`), emerald active-card border and
+       `📌 ON LIVE STRIP` badge, and `◀` / `▶` quick-cycle buttons on the floating
+       strip itself.
+     - Modernized all Tkinter buttons, cards, borders, context menus, and the
+       vertical `ttk.Scrollbar` (`Dark.Vertical.TScrollbar`) so no unstyled Windows 95
+       gray 3D buttons remain, and persisted `selected` across sessions on macOS as
+       well as Windows.
+  4. **Persistent Feed Scope & Team Selector (`scope` + `team`):**
+     - Added `"scope"` (`"team"`, `"international"`, or `None`) and `"team"` to
+       `settings.py` (`DEFAULTS` + validation in `load_settings()`), persisted
+       in `settings.json` so restarts remember the choice automatically.
+     - Added `TEAMS` (12 major international sides and paired T20/Hundred
+       leagues, e.g., Pakistan → PSL, India → IPL, Australia → BBL,
+       England → The Hundred, South Africa → SA20, Bangladesh → BPL),
+       `is_team_match()`, `filter_for_scope()`, and `categories_for_scope()` in
+       `filter.py`, plus `ScoreService.set_filter(scope, team)` in `scores.py` to
+       re-filter cached pools immediately without waiting for another fetch.
+     - Added persistent `My Team: <Team>`, `Change Team ▾` (expanding a 3-column
+       team grid), and `International` buttons in the Windows Match Center (and
+       equivalent menu items in the macOS `rumps` menu), auto-opening the
+       Match Center / team-or-international choice on first launch when
+       `scope` is unset (`None`).
+  5. **Hardening & Stability Pass (verified via read-only audit + regression suite):**
+     - `scraper.py`: Added chronological `inningsId` sorting + `isDeclared` (`434/9d`)
+       formatting, key-order-independent `typeMatches` parsing in `_categories()`,
+       iterative JSON traversals, explicit-`null` field guards, active-resumption
+       exclusions + rain-phrase improvements in `match_state()`, and bounded
+       streaming HTTPS fetches (10 MiB cap + 20s deadline).
+     - `filter.py`: Prioritized the user's chosen national team ahead of its
+       paired league in `Team` mode (`_rank`), separated team-only vs league pills
+       in `matches_category(..., scope=scope)`, added `Pakistan Shaheens`, and
+       blocked non-senior/women's leaks into `International` mode.
+     - `settings.py`, `updater.py`, `update_engine.py`, `window_visibility.py`:
+       Validated `team in TEAMS` + unique temp-file replacement in `save_settings()`;
+       added `PermissionError` retry & `TimeoutExpired` protection to update
+       rollback, stale backup/stage cleanup (`cleanup_old_updates()`), `ETag`
+       caching (`If-None-Match`), `type(size) is int` validation, and multi-monitor
+       `monitor_work_area()` / Win+L `ERROR_ACCESS_DENIED` suppression.
+     - `main.py`: Added `pystray` setup synchronization + `topmost` menu sync +
+       clean tray teardown, idempotent `quit()` and modal update dialog guards,
+       wrapped filter pills and badge-first card headers, precision-touchpad scroll
+       handling, font caching, macOS `menu_key` caching (avoiding 2s menu rebuilds),
+       and empty-overs formatting fixes.
+- Preparing release **v2.9.0** on `main` (updating `version.py`, `release-notes.md`,
+  `readme.md`, and `docs/index.html` fallback metadata; pushing `main` and tag `v2.9.0`
+  to trigger Windows/macOS GitHub Actions builds). Note: the local `dist/PakCricket.exe`
+  was verified in-place on Windows before release tagging (`11:14 AM` build).
 
 ## Recent implementation history
 
@@ -29,64 +94,50 @@ see [AGENTS.md](AGENTS.md) for session instructions and
 | `e18605f` / v2.7.0 (2026-10-04) | Structured Cricbuzz parsing with HTML fallback and validation; stable IDs; preserved stale snapshots; improved Windows details, controls and preferences; macOS dropdown; numeric version comparison; regression suite. |
 | `36846c2` / v2.8.0 (2026-10-09) | Windows visibility watchdog and callback recovery; local logging; periodic update checks and visible notifications; portable Windows download/verify/replace/restart with backup/rollback; maintainer download-count report; Windows smoke checks added to release CI. |
 | `542692f` (2026-10-30) | Added AGENTS.md, PROJECT_CONTEXT.md, and HANDOFF.md persistent repository context. |
-| `3de9eab` (2026-11-03) | Added GitHub Pages showcase landing page (`docs/index.html`, `docs/.nojekyll`) and updated context. |
-| `4cf12dc` (2026-11-03) | Refined landing page with minimalist design, keyword-first copy, and distinct Windows/macOS button glows. |
-
-Conversation evidence: on 2026-10-09 the owner reported live scores updating
-correctly, but the bar disappearing after some time. v2.8.0 addresses visibility
-and UI callback resilience. No subsequent owner confirmation of the bar fix or
-an actual v2.8.0-to-newer-version update is recorded in the available history.
+| `0c975b1` (2026-11-03) | Added minimalist GitHub Pages landing page (`docs/index.html`), `sitemap.xml`, `robots.txt`, JSON-LD metadata, and Google Search Console verification tag. |
 
 ## Validation and external status
 
-- **Historical, 2026-10-09:** all 32 offline tests, Windows UI smoke checks, and
-  the local packaged-updater handshake test passed. The latter used disposable
-  copies of the same build; it is not proof of a real upgrade between different
-  published versions. GitHub Windows/macOS builds and release publication passed
-  for v2.8.0. [Recorded run](https://github.com/mabs7/cricket-tray/actions/runs/37939514206).
-- **Current landing-page & SEO task, 2026-11-03 (Windows):** pulled `3de9eab` from
-  `origin/main`, refined `docs/index.html` (`4cf12dc`), and added `docs/sitemap.xml`,
-  `docs/robots.txt`, canonical link, and `SoftwareApplication` JSON-LD metadata for
-  Google Search indexing. Verified repository-relative links, download asset URLs
-  (`PakCricket-Windows.zip`, `PakCricket-Mac.zip`), platform feature accuracy, and
-  `git diff --check`. Python application code and builds were unchanged.
-- [Issue #1](https://github.com/mabs7/cricket-tray/issues/1) reported missing
-  Pakistan/England Test scores before the scraper changes. It was replied to and
-  closed on 2026-10-04, linking v2.7.0. The reporter's later follow-up says they
-  plan to test during a match and contribute; it does **not** confirm resolution.
-- The last measured download total was **53** (37 Windows, 16 macOS) on
-  2026-10-09. This is historical, not today's total or active users. Obtain a fresh
-  report with `python download_counts.py`; no telemetry was added.
+- **Current session, 2026-11-13 (Windows):**
+  - `.venv\Scripts\python.exe -m unittest discover -s tests -v`: **41 offline tests passed**
+    after final `v2.9.0` release edits (including regression coverage for
+    explicit-`null` fields, key-reordered `typeMatches`, chronological `inningsId`
+    ordering + `isDeclared`, active vs rain phrases, `Team` ranking +
+    `matches_category(..., scope=scope)`, `ScoreService.set_filter()`, `scope`/`team`
+    settings validation, `bool`/`str` update asset size rejection, and Win+L
+    `ERROR_ACCESS_DENIED` suppression).
+  - `.venv\Scripts\python.exe tests\ui_smoke.py`: **passed** after final `v2.9.0`
+    edits on Windows (including first-launch `team_picker_open`, `set_feed`,
+    `toggle_team_picker`, `drag_move` safety, and idempotent `quit()`).
+  - `.venv\Scripts\python.exe test_scraper.py`: **passed** against live Cricbuzz
+    data (verified `Pakistan vs Sri Lanka` chronological innings + `434/9d` declared
+    score, `New Zealand vs India` `Innings Break`, `England vs Australia` live, and
+    `Zimbabwe vs Afghanistan` live).
+  - Live Windows packaged widget verification (`dist/PakCricket.exe`, `11:14 AM` build):
+    verified by owner on desktop showing `Bad Light` interruption state.
+  - `.venv\Scripts\python.exe tests\packaged_update_smoke.py`: **passed** earlier
+    against the `10:32:55 AM` `dist/PakCricket.exe` build (the `11:14 AM` smoke run
+    was canceled when interrupted; GitHub Actions `build-windows` re-runs
+    `packaged_update_smoke.py` on the `v2.9.0` artifact).
+  - `git diff --check`: **passed**.
+- **Earlier live diagnostic, 2026-11-11 (Windows, prior to `scope`/`team` UI controls):**
+  - `python test_scraper.py`: **passed** against live Cricbuzz data; verified
+    Pakistan vs Sri Lanka 1st Test (`Day 3: Stumps - Sri Lanka trail by 30 runs`)
+    is classified as `state="paused"`, `phase="Stumps"`, `is_live=False`, and
+    rendered as `● STUMPS` instead of `● LIVE`.
 
 ## Unresolved items and next tasks
 
-1. **Validate real Windows match usage.** Reproduce any continuing disappearance
-   and determine whether the app remains in the tray, becomes hidden/covered, or
-   exits. Check the local app log, topmost/hidden preferences, sleep/resume,
-   desktop switches and display changes. The original root cause was not proven;
-   do not describe the watchdog as a confirmed cure for all cases.
-2. **Validate on the MacBook.** Test menu rendering/selection, notifications,
-   refresh/shutdown behavior and packaged launch. Prior Windows checks and macOS
-   CI build success do not replace interactive macOS QA. macOS in-app executable
-   replacement is not implemented; release-page installation is intentional.
-3. **Exercise the first real portable upgrade when a newer release exists.**
-   Check digest verification, restart, preserved preferences, rollback, writable
-   and unwritable locations. Unit tests and the same-build packaged smoke test
-   already exist; preserve them.
-4. **Improve fixtures if new failures appear.** Add offline samples from failing
-   layouts/match states before adjusting parsing. Cricbuzz is still an upstream
-   dependency and can change or refuse requests. Keep blocked pages distinct
-   from valid empty schedules.
-5. **Small documentation/maintenance follow-ups, not changed here:** README still
-   calls the Mac archive `PakCricket.zip` in places, while release CI publishes
-   `PakCricket-Mac.zip`. Its general feature list also mixes Windows/macOS
-   capabilities; check platform-specific code before promising parity. Pinned
-   requirements and unpinned CI installs can diverge. No LICENSE file is present;
+1. **Verify `v2.9.0` GitHub Actions builds and release assets.** Confirm both
+   `PakCricket-Windows.zip` and `PakCricket-Mac.zip` are published under the `v2.9.0`
+   GitHub release.
+2. **Validate on the MacBook.** Test `PakCricket-Mac.zip` / menu rendering
+   (`STUMPS · ...`, `Team` / `International` menu switching, and reduced menu rebuilds)
+   on macOS.
+3. **Exercise portable upgrade from `v2.8.0` to `v2.9.0`.** Verify in-app upgrading
+   from v2.8.0 to v2.9.0 on Windows.
+4. **Small documentation/maintenance follow-ups:** No LICENSE file is present;
    license choice belongs to the owner.
-
-No active-installation counting or user-detail tracking is approved or pending
-implementation. Reddit/LinkedIn post drafts were prepared in conversation; no
-publication through this session was recorded.
 
 ## Continuing on either computer
 
@@ -95,15 +146,3 @@ and read AGENTS.md -> PROJECT_CONTEXT.md -> HANDOFF.md. Create a local virtual
 environment for that OS; do not transfer Windows binaries or `.venv` to macOS.
 Follow README/CI for platform setup and AGENTS.md for validation. User preferences
 and logs remain local; these files synchronize development knowledge only.
-
-When finishing significant work, replace stale progress in this file with the
-actual change, evidence, remaining work and commit/push/release state. Update
-PROJECT_CONTEXT.md for durable changes and AGENTS.md only for new working rules.
-Keep historical verification labeled with its date/platform rather than claiming
-it was repeated in the current session.
-
-## Documentation verification for this handoff
-
-- Added `docs/sitemap.xml` and `docs/robots.txt`, and updated `docs/index.html`, `PROJECT_CONTEXT.md`, and `HANDOFF.md`; existing Python application and test files are unchanged.
-- Repository-relative documentation links resolve and `git diff --check` passes.
-- No application tests/builds were required or rerun; no new application release was created.

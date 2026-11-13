@@ -38,21 +38,58 @@ with patch.object(service, "start"), patch.object(CricketApp, "check_update"), p
             app.tick()
             scheduled.assert_called_once_with(1000, app.tick)
         assert app.popup.resizable() == (1, 1)
+        assert app.team_picker_open is True
+        app.set_feed("international")
+        assert app.preferences["scope"] == "international"
+        assert service.scope == "international"
+        assert app.team_picker_open is False
+        app.toggle_team_picker()
+        assert app.team_picker_open is True
+        assert app.team_picker_frame.winfo_manager() == "pack"
+        app.set_feed("team", "India")
+        assert app.preferences["scope"] == "team"
+        assert app.preferences["team"] == "India"
+        assert service.team == "India"
+        assert app.team_picker_open is False
+        assert any("India" in btn.cget("text") for btn in app.filter_bar.winfo_children())
+        app.set_feed("team", "Pakistan")
+        assert any("Pakistan" in btn.cget("text") for btn in app.filter_bar.winfo_children())
         service.data.update(matches=[match], updated_at=1, revision=1)
         app.render_details(service.snapshot())
         assert len(app.cards.winfo_children()) == 1
-        service.data.update(matches=[match, dict(match, id="124")], revision=2)
+        second = dict(match, id="124", teams="Lahore Qalandars vs Karachi Kings",
+                      series="Pakistan Super League 2026", competition="PSL",
+                      scores=[{"team": "LQ", "runs": 188, "wickets": 5, "overs": "20"}])
+        service.data.update(matches=[dict(match, competition="International"), second], revision=2)
         app.render_details(service.snapshot())
         assert len(app.cards.winfo_children()) == 2
+        # Selecting a match in Match Center immediately updates the live strip.
+        app.select("124", toggle=False)
+        assert app.preferences["selected"] == "124"
+        assert "LQ 188/5" in app.label.cget("text")
+        assert app.status.cget("text").startswith("📌")
+        # Category filter tabs narrow the Match Center list while preserving the selected strip match.
+        app.set_category("PSL")
+        assert len(app.cards.winfo_children()) == 1
+        assert app.preferences["selected"] == "124"
+        app.set_category("All")
+        assert len(app.cards.winfo_children()) == 2
+        app.cycle_match(1)
+        assert app.preferences["selected"] == "123"
         service.data.update(matches=[], revision=3)
         app.render_details(service.snapshot())
         assert len(app.cards.winfo_children()) == 1
-        app.select("123")
+        app.select("123", toggle=False)
         assert app.preferences["selected"] == "123"
         app.resize_text(1)
         assert app.preferences["text_size"] == 11
         app.toggle_topmost()
         assert app.preferences["topmost"] is False
+        # Calling drag_move before drag_start must be a safe no-op.
+        class Event:
+            x_root = 10
+            y_root = 10
+        app.drag_move(Event())
         app.close_details()
         assert app.popup is None
         app.show_details()
@@ -61,3 +98,4 @@ with patch.object(service, "start"), patch.object(CricketApp, "check_update"), p
         print("Windows UI smoke check passed: visibility recovery, intentional hiding, update badge, refresh recovery, and popup controls")
     finally:
         app.quit()
+        app.quit()  # Idempotent quit must not raise on repeated invocation.

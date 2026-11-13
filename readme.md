@@ -1,6 +1,6 @@
 # 🏏 Pakistan Cricket Live Score Widget
 
-A lightweight cross-platform widget that shows live Pakistan cricket scores — no API key, no cost, fully free.
+A lightweight cross-platform widget that shows live scores for Pakistan matches, international cricket, and major T20/Hundred leagues (PSL, IPL, BPL, BBL, SA20, The Hundred) — no API key, no cost, fully free.
 
 - **macOS** → score appears in the **menu bar** (top right)
 - **Windows** → score appears in a **floating bar** (always on top, draggable)
@@ -11,7 +11,7 @@ A lightweight cross-platform widget that shows live Pakistan cricket scores — 
 
 | Platform | Download | Instructions |
 |---|---|---|
-| 🍎 macOS | [PakCricket.zip](../../releases/latest) | Unzip → double-click `PakCricket.app` |
+| 🍎 macOS | [PakCricket-Mac.zip](../../releases/latest) | Unzip → double-click `PakCricket.app` |
 | 🪟 Windows | [PakCricket-Windows.zip](../../releases/latest) | Unzip → double-click `PakCricket.exe` |
 
 ---
@@ -19,18 +19,21 @@ A lightweight cross-platform widget that shows live Pakistan cricket scores — 
 ## Features
 
 - 🔴 **Live match** → red indicator, refreshes every **45 seconds**
+
+- 🔵 **Stumps / session break / rain delay** → shows **STUMPS**, **LUNCH**, **TEA**, **INNINGS BREAK**, or **RAIN DELAY** instead of LIVE when play is paused
 - 🟠 **Match scheduled today** → orange icon, refreshes every **5 minutes**
 - ⚫ **No match** → grey icon, refreshes every **30 minutes**
 - **Floating bar** (Windows) — always visible score bar, drag anywhere on screen
 - **Menu bar** (macOS) — score shown as text in the top-right menu bar
-- Details button/double-click → resizable, scrollable match detail popup
-- Pin any relevant match to the bar; open its Cricbuzz page or refresh manually
-- Saved bar position, visibility, font size, and always-on-top preference
+- Details button/double-click → resizable, scrollable Match Center popup with category filter pills (`All`, team/league tabs, `International`)
+- **Feed mode switcher** → choose **My Team** (e.g., Pakistan + PSL, India + IPL, Australia + BBL, England + The Hundred, South Africa + SA20, Bangladesh + BPL, or other Test nations) or **International** (all senior international matches and major leagues); your choice is saved automatically and can be switched anytime from Match Center or the macOS menu
+- Pin any match to the live bar/strip (`Show on Live Strip` or `◀` / `▶` cycle controls); open its Cricbuzz page or refresh manually
+- Saved bar position, visibility, font size, feed preference, selected match, and always-on-top preference
 - Windows bar restores its visibility and always-on-top state without taking keyboard focus; explicit Hide and Quit are respected
 - Automatic update checks at startup and every six hours, with a visible update button and one notification per version
 - Portable Windows updates download, verify, replace, and restart the app after you click Update; settings and the previous executable are preserved
 - Failed updates keep the last successful scores and display their age
-- Filters: **Pakistan international + PSL matches only**
+- Coverage: **Pakistan fixtures, senior men's international matches, and 6 major franchise leagues (PSL, IPL, BPL, Big Bash League, SA20, The Hundred)**
 - No API key needed — reads Cricbuzz's embedded match data with scoped HTML fallback
 - Portable on Windows — no installation required
 
@@ -71,7 +74,7 @@ The bar watchdog respects Hide and the Always on top preference. Windows securit
 
 ## macOS Usage
 
-1. Download `PakCricket.zip` from [Releases](../../releases/latest)
+1. Download `PakCricket-Mac.zip` from [Releases](../../releases/latest)
 2. Unzip it
 3. Double-click `PakCricket.app` to run
 4. Score appears in your **menu bar** (top right)
@@ -131,7 +134,7 @@ python main.py
 pip install pyinstaller
 python3 create_icon.py
 pyinstaller --onefile --windowed --icon=icon.icns --name PakCricket main.py
-cd dist && zip -r PakCricket.zip PakCricket.app
+cd dist && zip -r PakCricket-Mac.zip PakCricket.app
 ```
 
 ### Windows → .exe

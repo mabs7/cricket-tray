@@ -57,6 +57,11 @@ class DownloadTests(unittest.TestCase):
         info["assets"][0]["browser_download_url"] = "https://github.com/other/repo/releases/download/v9.0.0/PakCricket-Windows.zip"
         with self.assertRaises(UpdateError):
             select_windows_asset(info)
+        for bad_size in (True, "100", 0):
+            bad = self.info(archive())
+            bad["assets"][0]["size"] = bad_size
+            with self.assertRaises(UpdateError):
+                select_windows_asset(bad)
 
     def test_verified_download_extracts_expected_file(self):
         content = archive()
@@ -181,6 +186,15 @@ class VisibilityTests(unittest.TestCase):
 
     def test_download_report_counts_assets_not_people(self):
         self.assertEqual(summarize([{"tag_name": "v2.7.0", "assets": [{"name": "PakCricket-Windows.zip", "download_count": 2}, {"name": "PakCricket-Mac.zip", "download_count": 1}]}]), [("v2.7.0", 2, 1)])
+
+    def test_locked_desktop_access_denied_does_not_raise(self):
+        root, api = Mock(), Mock()
+        api.GetAncestor.return_value = 123
+        api.IsWindowVisible.return_value = True
+        api.IsIconic.return_value = False
+        api.SetWindowPos.return_value = 0
+        with patch("window_visibility.sys.platform", "win32"), patch("window_visibility.ctypes.WinDLL", return_value=api, create=True), patch("window_visibility.ctypes.get_last_error", return_value=5):
+            ensure_bar_visible(root, hidden=False, topmost=True)
 
 if __name__ == "__main__":
     unittest.main()

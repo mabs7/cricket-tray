@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from urllib.parse import urlparse
 import zipfile
 import requests
@@ -16,7 +17,9 @@ from update_engine import UpdateError, sha256_file
 
 CHECK_INTERVAL = 6 * 60 * 60
 MAX_DOWNLOAD = 150 * 1024 * 1024
+DOWNLOAD_TIMEOUT = 300
 HEADERS = {"Accept": "application/vnd.github+json", "User-Agent": "Cricket-Tray-Updater"}
+_RELEASE_CACHE = {}
 
 def version_tuple(value):
     found = re.fullmatch(r"v?(\d+)\.(\d+)(?:\.(\d+))?", value or "")
@@ -30,9 +33,20 @@ def trusted_url(url, repository, tag, asset=None):
 def check_for_updates(current_version, github_repo):
     result = {"update_available": False, "latest_version": current_version, "release_url": "", "assets": [], "error": ""}
     try:
-        response = requests.get(f"https://api.github.com/repos/{github_repo}/releases/latest", headers=HEADERS, timeout=(5, 15))
-        response.raise_for_status()
-        data = response.json()
+        headers = dict(HEADERS)
+        cached = _RELEASE_CACHE.get(github_repo)
+        if cached and isinstance(cached.get("etag"), str):
+            headers["If-None-Match"] = cached["etag"]
+        response = requests.get(f"https://api.github.com/repos/{github_repo}/releases/latest", headers=headers, timeout=(5, 15))
+        if response.status_code == 304 and cached and isinstance(cached.get("data"), dict):
+            data = cached["data"]
+        else:
+            response.raise_for_status()
+            data = response.json()
+            resp_headers = getattr(response, "headers", None)
+            etag = resp_headers.get("ETag") if hasattr(resp_headers, "get") else None
+            if isinstance(etag, str) and isinstance(data, dict):
+                _RELEASE_CACHE[github_repo] = {"etag": etag, "data": data}
         tag = data.get("tag_name", "")
         latest, current = version_tuple(tag), version_tuple(current_version)
         if latest and current and latest > current and not data.get("draft") and not data.get("prerelease"):
@@ -58,7 +72,8 @@ def select_windows_asset(info):
     digest = asset.get("digest") or ""
     if not re.fullmatch(r"sha256:[0-9a-fA-F]{64}", digest):
         raise UpdateError("This release has no verifiable download digest; use the release page instead")
-    if not 0 < asset.get("size", 0) <= MAX_DOWNLOAD:
+    size = asset.get("size", 0)
+    if type(size) is not int or not 0 < size <= MAX_DOWNLOAD:
         raise UpdateError("Unexpected release size")
     return asset
 
@@ -70,22 +85,39 @@ def extract_executable(archive, destination):
             raise UpdateError("The release archive has an unexpected layout")
         if (files[0].external_attr >> 16) & 0o170000 == 0o120000:
             raise UpdateError("The executable cannot be a symbolic link")
+        extracted = 0
         with source.open(files[0]) as incoming, Path(destination).open("wb") as output:
-            shutil.copyfileobj(incoming, output)
+            while True:
+                chunk = incoming.read(256 * 1024)
+                if not chunk:
+                    break
+                extracted += len(chunk)
+                if extracted > MAX_DOWNLOAD:
+                    raise UpdateError("The extracted executable exceeded maximum allowed size")
+                output.write(chunk)
     with Path(destination).open("rb") as source:
         if source.read(2) != b"MZ":
             raise UpdateError("The download is not a Windows executable")
+
+def _trusted_download_url(url):
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    return parsed.scheme == "https" and (host == "github.com" or host.endswith(".githubusercontent.com"))
 
 def download_windows_update(info, stage, progress=lambda _: None):
     asset = select_windows_asset(info)
     archive = Path(stage) / "download.zip"
     digest, received = hashlib.sha256(), 0
+    deadline = time.monotonic() + DOWNLOAD_TIMEOUT
     with requests.get(asset["browser_download_url"], stream=True, timeout=(10, 30)) as response:
         response.raise_for_status()
-        if urlparse(response.url).scheme != "https":
-            raise UpdateError("The download redirected to an insecure URL")
+        hops = [*response.history, response] if isinstance(getattr(response, "history", None), (list, tuple)) else [response]
+        if any(not _trusted_download_url(hop.url) for hop in hops):
+            raise UpdateError("The download redirected to an untrusted or insecure URL")
         with archive.open("wb") as output:
             for chunk in response.iter_content(256 * 1024):
+                if time.monotonic() > deadline:
+                    raise UpdateError("The download timed out")
                 if not chunk:
                     continue
                 received += len(chunk)

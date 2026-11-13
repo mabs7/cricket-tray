@@ -1,26 +1,23 @@
-## PAK Cricket v2.8.0
+## PAK Cricket v2.9.0
 
-### Sticky Windows score bar
-- Restore bar visibility and always-on-top state without stealing keyboard focus.
-- Respect explicit Hide, Quit, and the Always on top preference.
-- Keep refresh callbacks running after recoverable UI errors and record bounded local diagnostics.
+### Expanded cricket coverage & team selector
+- Follow **My Team** (Pakistan + PSL, India + IPL, Australia + BBL, England + The Hundred, South Africa + SA20, Bangladesh + BPL, or other Test nations) or switch to **International** mode for senior men's internationals and 6 major leagues (**PSL**, **IPL**, **BPL**, **Big Bash League**, **SA20**, **The Hundred**).
+- Your feed mode, chosen team, and pinned strip match are saved in `settings.json` and can be changed anytime from Match Center or the macOS menu.
 
-### Portable updates
-- Check GitHub at startup and every six hours, with a manual Check for updates action.
-- Show an update button on the Windows bar and notify once per new version.
-- Download and verify Windows releases after the user chooses Update, then replace and restart the app.
-- Keep the previous executable and automatically restore it if the new app fails to initialize.
-- Preserve preferences; offer another save location when the current folder cannot be written.
-- macOS users receive update notifications and continue to install from the release page.
+### Match Center & live strip selection
+- View all matching fixtures in the scrollable Match Center with competition filter pills (`All`, team/league tabs, `International`) while pinning any single match to the floating strip (`Show on Live Strip` or `◀` / `▶` controls).
+- Modernized Windows buttons, cards, borders, category pills, and scrollbars, plus responsive multi-monitor work-area clamping.
 
-### Maintainer download report
-- Run `python download_counts.py` to report GitHub release downloads by version and platform.
-- Download counts are not unique users. No widget telemetry was added.
+### Accurate break & Test innings states
+- Show **STUMPS**, **LUNCH**, **TEA**, **DINNER**, **DRINKS**, **INNINGS BREAK**, **RAIN DELAY**, **WET OUTFIELD**, or **BAD LIGHT** instead of **LIVE** when play stops, while keeping active play phrases (such as `"resumes after lunch"`) as live.
+- Poll every 45s during live play, 2 minutes during mid-day breaks/delays, and 5 minutes overnight at Stumps.
+- Order Test innings chronologically and format declared totals with `d` (e.g., `PAK 434/9d`).
+
+### Reliability & portable updater hardening
+- Added `ETag` / `If-None-Match` release checks, bounded streaming Cricbuzz fetches, atomic settings saves, `PermissionError` retry on Windows update rollback, stale update-folder pruning, and reduced menu rebuild overhead on macOS.
 
 ### Downloads
 - Windows: unzip `PakCricket-Windows.zip` and run `PakCricket.exe`.
 - macOS: unzip `PakCricket-Mac.zip` and open `PakCricket.app`.
 
-Users of v2.7.0 and earlier must download this release manually once. Subsequent Windows releases can be installed inside the portable app. No installer is required.
-
-The app is unsigned. Security screens and exclusive full-screen applications may cover the bar. Cricbuzz format changes can still interrupt score updates; the last successful scores are retained.
+Portable Windows users on v2.8.0 can upgrade from inside the app after the release finishes building. The app remains unsigned, free, API-key-free, and telemetry-free; Cricbuzz format changes can still interrupt updates while retaining the last reliable score.

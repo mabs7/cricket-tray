@@ -6,20 +6,22 @@ for working rules, [HANDOFF.md](HANDOFF.md) for the latest status, and
 
 ## Purpose and distribution
 
-[PAK Cricket](https://github.com/mabs7/cricket-tray) keeps Pakistan international
-and PSL scores visible while the user works. Windows uses Tkinter plus pystray;
-macOS uses rumps. It is a flat Python application, packaged separately on each OS
-with PyInstaller. There is no application backend, database, login, required API
-key, or analytics service. Preferences/logs are local, not synchronized via Git.
+[PAK Cricket](https://github.com/mabs7/cricket-tray) keeps Pakistan fixtures,
+senior men's international cricket, and the six major franchise leagues (PSL, IPL,
+BPL, Big Bash League, SA20, and The Hundred) visible while the user works. Windows
+uses Tkinter plus pystray; macOS uses rumps. It is a flat Python application,
+packaged separately on each OS with PyInstaller. There is no application backend,
+database, login, required API key, or analytics service. Preferences/logs are
+local, not synchronized via Git.
 
 ## Architecture
 
 | Module | Responsibility |
 | --- | --- |
-| `scraper.py` | Fetch live/recent/upcoming Cricbuzz pages concurrently; decode embedded JSON and Next.js flight chunks; fall back to HTML scoped by match ID, with JSON-LD fixture metadata. Validate scores and report failures. |
-| `filter.py` | Recognize Pakistan teams and PSL teams/series, deduplicate by ID, prioritize live then scheduled fixtures then up to three recent completed matches. Format display text. |
-| `scores.py` | `ScoreService`: worker loop, event-driven manual refresh/stop, locked state, deep-copy snapshots, stale-data preservation and freshness text. |
-| `main.py` | Platform-specific `CricketApp`, UI rendering/actions, selection, update notification queues and helper command routing. |
+| `scraper.py` | Fetch live/recent/upcoming Cricbuzz pages concurrently; decode embedded JSON, Next.js flight chunks, and `typeMatches` category groupings; fall back to HTML scoped by match ID, with JSON-LD fixture metadata. Distinguish active play (`live`) from session/day interruptions (`paused` with `phase` such as `Stumps`, `Lunch`, `Tea`, `Innings Break`, `Rain Delay`). Validate scores and report failures. |
+| `filter.py` | Filter by saved feed scope (`scope="team"` for a chosen team and its paired league, or `scope="international"` for senior men's internationals plus `PSL`, `IPL`, `BPL`, `BBL`, `SA20`, `The Hundred`), excluding unrelated domestic/T10/legends/non-Pakistan women's leagues unless viewed in Pakistan team mode. Provide `categories_for_scope()` and `matches_category()` for Match Center filter tabs. Deduplicate by ID, prioritize active `live` then `paused` (ordered International -> League in International mode, or Pakistan/PSL -> International -> League in default mode), then up to twelve scheduled fixtures and eight recent completed matches. |
+| `scores.py` | `ScoreService`: worker loop, event-driven manual refresh/stop, instant `set_filter(scope, team)` re-filtering of cached `pools`, locked state, deep-copy snapshots, stale-data preservation and freshness text. |
+| `main.py` | Platform-specific `CricketApp`, modernized Match Center popup with persistent feed mode controls (`My Team: <Team>`, `Change Team ▾`, `International`), first-launch team-or-international picker when `scope` is unset, scope-aware category filter pills, one-click match selection for the floating live strip (`Show on Live Strip`), quick `◀`/`▶` strip cycling, update notification queues, and helper command routing. |
 | `window_visibility.py` | Windows HWND visibility/topmost restoration without foreground activation, while respecting deliberate hiding. |
 | `settings.py` / `app_logging.py` | Validated JSON preferences with temporary-file replacement; bounded rotating local logs. |
 | `updater.py` | Stable-release checks, six-hour monitor, trusted GitHub URLs, streamed digest-verified downloads, ZIP validation, staging, helper launch. |
@@ -36,27 +38,35 @@ executed as code. The parser is pure and can consume saved fixtures.
 ### Shared data contracts
 
 - A match includes `id` (string), `href`, `teams`, `team_names`, `team_codes`,
-  `series`, `start_time`, `status`, `state`, `is_live`, `is_psl`, `scores`, `score`
-  (formatted text), and `parser` (`embedded` or `html`).
+  `series`, `start_time`, `status`, `state`, `phase` (interruption label such as
+  `Stumps`, `Lunch`, `Tea`, `Innings Break`, `Rain Delay`, or `""`), `is_live`,
+  `is_psl`, `category` (`international`, `league`, `domestic`, `women`, or `""`),
+  `competition` (`Pakistan`, `International`, `PSL`, `IPL`, `BPL`, `BBL`, `SA20`,
+  `The Hundred`, added by `filter.py`), `scores`, `score` (formatted text), and
+  `parser` (`embedded` or `html`).
 - Each score row contains `team`, integer `runs`, nullable integer `wickets`, and
   textual `overs`. Embedded Cricbuzz overs such as `19.6` are normalized to `20`;
   overs are cricket ball notation, not decimal fractions. Wickets must be 0-10.
 - `start_time` can be Unix milliseconds or timezone-aware ISO text; `parse_date`
   converts it to UTC. Display times and the meaning of "today" use local time.
-- Match states: `live`, `scheduled`, `completed`, `unknown`. Aggregate selection
-  adds `today` and `none`; these are distinct from network/parse health.
+- Match states: `live`, `paused`, `scheduled`, `completed`, `unknown`. Aggregate
+  selection adds `today` and `none`; these are distinct from network/parse health.
+  UI surfaces render `state_label(match)`, which displays the specific `phase` in
+  uppercase (`STUMPS`, `LUNCH`, `TEA`, `INNINGS BREAK`, `RAIN DELAY`) when a match
+  is `paused` instead of showing `LIVE`.
 - `get_all_matches()` returns `live`, `recent`, `upcoming` lists and an `errors`
   dictionary identifying failed pools. Empty recognized schedules are valid;
   blocked/unrecognized pages raise `ScrapeError` instead of pretending no matches.
 - A service snapshot includes `state`, `matches`, `updated_at`, `errors`,
   `refreshing`, `revision`. A refresh commits only when all pools succeed. Failed
-  refreshes, or a previously available live score disappearing, preserve the
+  refreshes, or a previously available live/paused score disappearing, preserve the
   complete previous snapshot and its successful timestamp. Scores are in memory
   only and do not survive app exit.
 
 ### Timing and UI ownership
 
-Score network intervals: live 45 seconds; today/scheduled 300 seconds;
+Score network intervals: live 45 seconds; paused 120 seconds (300 seconds when all
+paused matches are at Stumps overnight); today/scheduled 300 seconds;
 completed/no fixtures 1,800 seconds; failures retry after 60 seconds. Windows
 redraws on a one-second timer and checks bar visibility every two seconds. UI
 timers consume cached snapshots; they do not fetch a score every second.
@@ -65,16 +75,18 @@ Tk owns the Windows main thread; fetching, release checks/downloads, and tray wo
 run in background threads and send commands through a queue. Recoverable tick
 errors are logged and the timer is rescheduled. macOS uses a rumps timer and a
 queue for update results. Do not assume the two interfaces have identical feature
-parity: Windows persists match pinning and bar settings; macOS match selection is
-currently in-memory and its details are in the dropdown.
+parity: Windows provides the floating live strip, Match Center popup, and
+portable self-update, while macOS uses the menu bar dropdown and opens the
+release page; both interfaces persist feed scope, team, and match selection.
 
 ### Preferences and logging
 
 `settings_path()` resolves to `%APPDATA%/PakCricket/settings.json` on Windows, or
 `~/.config/PakCricket/settings.json` when APPDATA is absent (including macOS).
-Keys: position, hidden, topmost, text_size, selected, notified_version. Logs are
-adjacent as `app.log`, rotating at 512,000 bytes with two backups. These are
-machine-local runtime files. They must not be committed or copied between PCs.
+Keys: position, hidden, topmost, text_size, selected, notified_version, scope
+(`"team"`, `"international"`, or `null`), team (selected team name or `null`).
+Logs are adjacent as `app.log`, rotating at 512,000 bytes with two backups. These
+are machine-local runtime files. They must not be committed or copied between PCs.
 
 ### Portable updater and release contract
 
