@@ -1,0 +1,2269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google-site-verification" content="X2aO_wCwpkXYYxWlckBZ66yyuYyz10O1MfuBj0jpOd0" />
+  <title>Cricket Tray — Live Cricket Score Widget (Windows &amp; macOS)</title>
+  <meta name="description" content="A minimalist desktop widget for Pakistan, senior international cricket, and 6 major leagues (PSL, IPL, BPL, BBL, SA20, The Hundred). Floating bar on Windows, menu bar app on macOS, plus on-demand batters, bowlers, and recent overs. Free, portable, zero tracking." />
+  <meta name="keywords" content="Cricket Tray, PAK Cricket, live cricket score widget, international cricket desktop widget, PSL IPL BBL BPL SA20 The Hundred live score, cricket tray app Windows, cricket menu bar app macOS, Pakistan cricket score, Muhammad Abubakar, mabs7" />
+  <meta name="author" content="Muhammad Abubakar" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://mabs7.github.io/cricket-tray/" />
+  <meta name="theme-color" content="#0b0f14" />
+  <meta property="og:title" content="Cricket Tray — Live Desktop Score Widget (Windows &amp; macOS)" />
+  <meta property="og:description" content="Live Pakistan, senior international, and PSL/IPL/BBL/BPL/SA20/Hundred cricket scores on your screen, with expandable batters, bowlers, and recent overs. Free, portable, and API-key-free." />
+  <meta property="og:url" content="https://mabs7.github.io/cricket-tray/" />
+  <meta property="og:site_name" content="Cricket Tray" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://mabs7.github.io/cricket-tray/og-preview.png" />
+  <meta property="og:image:secure_url" content="https://mabs7.github.io/cricket-tray/og-preview.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Cricket Tray desktop widget floating bar and Match Center preview showing live scores, batters, bowler, and recent overs" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Cricket Tray — Live Desktop Score Widget (Windows &amp; macOS)" />
+  <meta name="twitter:description" content="Live Pakistan, senior international, and major league cricket scores on your screen with expandable batters, bowlers, and recent balls. Free, portable, and API-key-free." />
+  <meta name="twitter:image" content="https://mabs7.github.io/cricket-tray/og-preview.png" />
+  <meta name="twitter:image:alt" content="Cricket Tray desktop widget floating bar and Match Center preview" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Cricket Tray",
+        "operatingSystem": "Windows 10, Windows 11, macOS",
+        "softwareRequirements": "Windows 10/11 or macOS (unzip and run)",
+        "applicationCategory": "SportsApplication",
+        "isAccessibleForFree": true,
+        "description": "A minimalist desktop widget for Pakistan, senior international cricket, and major leagues (PSL, IPL, BPL, BBL, SA20, The Hundred), featuring an on-demand Match Center with batters, active bowler, last wicket, and recent overs. Floating bar on Windows, menu bar app on macOS.",
+        "url": "https://mabs7.github.io/cricket-tray/",
+        "downloadUrl": "https://github.com/mabs7/cricket-tray/releases/latest",
+        "releaseNotes": "https://github.com/mabs7/cricket-tray/releases/tag/v3.0.0",
+        "softwareVersion": "v3.0.0",
+        "image": "https://mabs7.github.io/cricket-tray/og-preview.png",
+        "screenshot": "https://mabs7.github.io/cricket-tray/og-preview.png",
+        "author": {
+          "@type": "Person",
+          "name": "Muhammad Abubakar",
+          "url": "https://abubakar144-portfolio.netlify.app",
+          "sameAs": [
+            "https://github.com/mabs7"
+          ]
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do I open Cricket Tray if Windows SmartScreen or macOS Gatekeeper warns about an unsigned app?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The releases are unsigned to keep the project free. On Windows, click More info then Run anyway in SmartScreen. On macOS, open System Settings > Privacy & Security and allow CricketTray.app."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I switch between My Team and all International matches?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Open Match Center on Windows (or the menu bar dropdown on macOS) anytime to pick any of the 12 supported teams or switch to International & 6 major leagues. Your preference is saved locally."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does Cricket Tray require an API key or send analytics?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Cricket Tray works out of the box with zero API keys, zero accounts, and zero telemetry."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="icon" type="image/png" sizes="48x48" href="./favicon-48x48.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --surface: #121820;
+      --surface-elevated: #18212c;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.18);
+      --fg: #f3f6fa;
+      --muted: #8b98a9;
+      --subtle: #5c697a;
+      --win-accent: #64d4a4;
+      --mac-accent: #7ec8f8;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --max-w: 1020px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(100, 212, 164, 0.06), transparent 48%),
+        var(--bg);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--win-accent);
+      outline-offset: 2px;
+    }
+
+    strong {
+      color: var(--fg);
+      font-weight: 600;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Header / Navbar ── */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(11, 15, 20, 0.85);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .navbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      gap: 16px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--win-accent);
+      box-shadow: 0 0 12px rgba(100, 212, 164, 0.6);
+    }
+
+    .version-pill {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .nav-links a:hover {
+      color: var(--fg);
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 13px;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--fg) !important;
+      font-weight: 600;
+      font-size: 0.84rem;
+      transition: border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .nav-cta:hover {
+      background: var(--surface-elevated);
+      border-color: var(--border-hover);
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 48px 0 36px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--win-accent);
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.3rem, 5vw, 3.6rem);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+      max-width: 760px;
+      margin: 0 auto 18px;
+    }
+
+    .hero h1 span {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 1.8vw, 1.14rem);
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 32px;
+    }
+
+    /* ── Download Buttons (Distinct Hover Glows) ── */
+    .download-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      padding: 13px 22px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.94rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Windows Button: Emerald Glow */
+    .btn-win {
+      background: var(--win-accent);
+      color: #09130e;
+      border-color: rgba(100, 212, 164, 0.5);
+      box-shadow: 0 8px 24px rgba(100, 212, 164, 0.18);
+    }
+
+    .btn-win:hover {
+      background: #78dfb3;
+      border-color: #9ef0cc;
+      box-shadow: 0 0 28px rgba(100, 212, 164, 0.52), 0 12px 32px rgba(100, 212, 164, 0.28);
+    }
+
+    /* macOS Button: Ice-Blue / Cyan Glow */
+    .btn-mac {
+      background: var(--surface-elevated);
+      color: var(--fg);
+      border-color: rgba(126, 200, 248, 0.32);
+      box-shadow: 0 8px 24px rgba(126, 200, 248, 0.12);
+    }
+
+    .btn-mac:hover {
+      background: #1e2b3a;
+      border-color: var(--mac-accent);
+      box-shadow: 0 0 28px rgba(126, 200, 248, 0.48), 0 12px 32px rgba(126, 200, 248, 0.24);
+    }
+
+    .btn-neutral {
+      background: var(--surface);
+      color: var(--fg);
+      border-color: var(--border);
+    }
+
+    .btn-neutral:hover {
+      background: var(--surface-elevated);
+      border-color: var(--border-hover);
+    }
+
+    .btn-sub {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 500;
+      opacity: 0.78;
+      text-align: left;
+    }
+
+    .btn-text-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1.25;
+    }
+
+    /* Minimal Keyword Pills */
+    .keyword-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .keyword-pill {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+
+    .keyword-pill strong {
+      color: var(--fg);
+    }
+
+    /* ── Interactive Widget Showcase ── */
+    .showcase-wrap {
+      margin: 24px auto 0;
+      max-width: 880px;
+    }
+
+    .showcase-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+    }
+
+    .tab-group {
+      display: inline-flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid transparent;
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--fg);
+    }
+
+    .tab-btn.active {
+      background: var(--surface-elevated);
+      color: var(--fg);
+      border-color: var(--border);
+    }
+
+    .desktop-stage {
+      position: relative;
+      min-height: 380px;
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      text-align: left;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Windows Floating Bar replica from main.py */
+    .win-floating-bar {
+      position: relative;
+      z-index: 5;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 620px;
+      min-height: 44px;
+      background: #121a24;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 4px 8px;
+      gap: 10px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+      font-family: "Segoe UI", "Inter", sans-serif;
+      user-select: none;
+    }
+
+    .win-status {
+      font-weight: 700;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #17212d;
+      letter-spacing: 0.02em;
+      color: var(--win-accent);
+    }
+
+    .win-grip {
+      color: #5e7084;
+      font-size: 0.85rem;
+      line-height: 1;
+      padding-left: 2px;
+      cursor: grab;
+    }
+
+    .win-divider-v {
+      width: 1px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+    }
+
+    .win-score-text {
+      flex: 1;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: #eef3f8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .win-btn {
+      background: #1d2938;
+      color: #eef3f8;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 11px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .win-btn-update {
+      background: var(--win-accent);
+      color: #0b141c;
+    }
+
+    /* Windows Details Popup replica from main.py */
+    .win-details-popup {
+      position: relative;
+      z-index: 4;
+      margin: 16px auto 0;
+      width: 100%;
+      max-width: 500px;
+      background: #121a24;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6);
+      padding: 16px 18px;
+      font-family: "Segoe UI", "Inter", sans-serif;
+    }
+
+    .win-popup-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+
+    .win-popup-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #eef3f8;
+    }
+
+    .win-popup-fresh {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .win-match-card {
+      background: #1d2938;
+      border-radius: 8px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .win-card-state {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--win-accent);
+      margin-bottom: 2px;
+    }
+
+    .win-card-teams {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: #eef3f8;
+    }
+
+    .win-card-series {
+      font-size: 0.76rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .win-card-score-row {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #dfe7f0;
+      font-family: "JetBrains Mono", monospace;
+      margin: 2px 0;
+    }
+
+    .win-card-status {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .win-card-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .win-card-actions-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .win-detail-drawer {
+      margin-top: 10px;
+      padding: 9px 10px;
+      background: #131c27;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 6px;
+      font-size: 0.77rem;
+      color: #cbd5e1;
+    }
+
+    .win-detail-strip {
+      color: #f0b95c;
+      font-weight: 600;
+      font-size: 0.73rem;
+      margin-bottom: 6px;
+    }
+
+    .win-detail-cols {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .win-detail-hdr {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .win-detail-line {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: #e2e8f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .win-detail-wicket {
+      font-size: 0.73rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .win-detail-balls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .win-ball-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      border-radius: 4px;
+      background: #1b2634;
+      color: #e2e8f0;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .win-ball-chip.four {
+      background: rgba(126, 200, 248, 0.16);
+      color: #7ec8f8;
+    }
+
+    .win-ball-chip.six {
+      background: rgba(46, 184, 114, 0.18);
+      color: #2eb872;
+    }
+
+    .win-ball-chip.wkt {
+      background: rgba(239, 98, 98, 0.18);
+      color: #ef6262;
+    }
+
+    .win-team-grid {
+      display: none;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 10px;
+      padding: 8px;
+      background: #101822;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+    }
+
+    .win-team-grid.open {
+      display: grid;
+    }
+
+    .win-scope-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .win-pill-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .win-pill {
+      background: #182230;
+      color: var(--muted);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .win-pill.active {
+      background: #1e3044;
+      color: #eef3f8;
+      border-color: var(--win-accent);
+    }
+
+    .win-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+
+    .win-strip-badge {
+      font-size: 0.66rem;
+      font-weight: 700;
+      color: #0b141c;
+      background: var(--win-accent);
+      border-radius: 4px;
+      padding: 2px 6px;
+      white-space: nowrap;
+    }
+
+    /* macOS Menu Bar replica */
+    .mac-preview-container {
+      display: none;
+      position: relative;
+      z-index: 5;
+      width: 100%;
+    }
+
+    .mac-menubar {
+      width: 100%;
+      height: 32px;
+      background: #18212c;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      font-size: 0.8rem;
+      color: var(--fg);
+    }
+
+    .mac-menubar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: var(--muted);
+    }
+
+    .mac-widget-pill {
+      background: rgba(126, 200, 248, 0.12);
+      border: 1px solid rgba(126, 200, 248, 0.35);
+      padding: 2px 10px;
+      border-radius: 5px;
+      font-weight: 600;
+      color: var(--fg);
+      font-size: 0.78rem;
+      display: inline-block;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mac-menubar-right {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .mac-feed-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .mac-dropdown {
+      margin: 8px 0 0 auto;
+      width: 300px;
+      max-width: 100%;
+      background: #141c26;
+      border: 1px solid var(--border-hover);
+      border-radius: 10px;
+      padding: 6px;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6);
+      font-size: 0.82rem;
+    }
+
+    .mac-menu-item {
+      padding: 4px 10px;
+      border-radius: 5px;
+      color: var(--fg);
+    }
+
+    .mac-menu-item.muted {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .mac-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px;
+    }
+
+    .stage-caption {
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    /* ── Sections ── */
+    section {
+      padding: 56px 0;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 560px;
+      margin: 0 auto 36px;
+    }
+
+    .section-title {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 8px;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    /* ── Minimal Feature Grid (Keyword-first) ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      transition: border-color 0.18s ease;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .feature-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--win-accent);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    /* ── Platform Cards ── */
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+      gap: 20px;
+    }
+
+    .platform-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .platform-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .platform-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .os-badge {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.72rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--surface-elevated);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .os-badge.detected {
+      color: var(--fg);
+      border-color: var(--border-hover);
+    }
+
+    .steps-line {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 18px;
+      overflow-wrap: anywhere;
+    }
+
+    .platform-list {
+      list-style: none;
+      margin: 0 0 24px;
+      display: grid;
+      gap: 9px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .platform-list li::before {
+      content: "→ ";
+      color: var(--muted);
+    }
+
+    /* ── FAQ Section ── */
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+      gap: 16px;
+    }
+
+    .faq-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+    }
+
+    .faq-card h3 {
+      font-size: 0.98rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--fg);
+    }
+
+    .faq-card p {
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+
+    /* ── Developer Section ── */
+    .dev-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .dev-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .dev-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-hover);
+      color: var(--fg);
+      font-weight: 800;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .dev-identity h2 {
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .dev-handle {
+      font-family: "JetBrains Mono", monospace;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .dev-bio {
+      color: var(--muted);
+      font-size: 0.94rem;
+      max-width: 720px;
+    }
+
+    .dev-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a:hover {
+      color: var(--fg);
+    }
+
+    @media (max-width: 780px) {
+      .nav-links {
+        gap: 14px;
+        font-size: 0.82rem;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .navbar-inner {
+        height: auto;
+        min-height: 58px;
+        flex-wrap: wrap;
+        padding: 10px 0;
+      }
+      .nav-links {
+        width: 100%;
+        justify-content: space-between;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+      .hero {
+        padding: 36px 0 32px;
+      }
+      .desktop-stage {
+        padding: 16px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .container {
+        padding: 0 16px;
+      }
+      .platform-card,
+      .dev-card {
+        padding: 20px;
+      }
+      .win-floating-bar {
+        gap: 6px;
+        padding: 4px 6px;
+      }
+      .win-btn {
+        padding: 5px 8px;
+        font-size: 0.74rem;
+      }
+      .mac-menubar {
+        padding: 0 10px;
+        gap: 8px;
+      }
+      .mac-menubar-left .mac-menu-app-only {
+        display: none;
+      }
+      .win-team-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+      .btn {
+        transition: none;
+      }
+      .btn:hover {
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navigation ── -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="#" class="brand">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span>Cricket Tray</span>
+        <span class="version-pill" id="nav-version">v3.0.0</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#preview">Preview</a>
+        <a href="#features">Highlights</a>
+        <a href="#download">Download</a>
+        <a href="#faq">FAQ</a>
+        <a href="#developer">Developer</a>
+        <a href="https://github.com/mabs7/cricket-tray" target="_blank" rel="noopener" class="nav-cta">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11.05 11.05 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Hero ── -->
+  <main>
+    <section class="hero">
+      <div class="container">
+        <span class="hero-eyebrow">Internationals · My Team · 6 Major Leagues</span>
+
+        <h1>
+          Live Cricket Scores.<br />
+          <span>Cricket Tray on Windows &amp; macOS.</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          <strong>Floating bar</strong> on Windows. <strong>Menu bar app</strong> on macOS.
+          Follow <strong>My Team</strong> or <strong>International cricket &amp; major leagues</strong>—plus expandable batters, bowlers, and recent overs when you click <strong>More</strong>.
+        </p>
+
+        <div class="download-row">
+          <a id="dl-win-hero" href="https://github.com/mabs7/cricket-tray/releases/latest/download/CricketTray-Windows.zip" class="btn btn-win">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 3.5 10.5 2.3v9.2H2V3.5zm9.5-1.35L22 0.7v10.8H11.5V2.15zM2 12.5h8.5v9.2L2 20.5v-8zm9.5 0H22v10.8l-10.5-1.45V12.5z"/></svg>
+            <span class="btn-text-group">
+              <span>Download for Windows</span>
+              <span class="btn-sub" id="win-sub-label">Portable .exe · No installer</span>
+            </span>
+          </a>
+
+          <a id="dl-mac-hero" href="https://github.com/mabs7/cricket-tray/releases/latest/download/CricketTray-Mac.zip" class="btn btn-mac">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.33c.67-.81 1.12-1.94 1-3.08-.96.04-2.13.64-2.82 1.45-.61.7-.11 1.85-.98 2.97 1.08.08 2.13-.53 2.8-1.34"/></svg>
+            <span class="btn-text-group">
+              <span>Download for macOS</span>
+              <span class="btn-sub" id="mac-sub-label">Menu Bar .app Archive</span>
+            </span>
+          </a>
+        </div>
+
+        <div class="keyword-strip">
+          <span class="keyword-pill"><strong>100% Free</strong> &amp; Portable</span>
+          <span class="keyword-pill"><strong>No API Key</strong> Required</span>
+          <span class="keyword-pill"><strong>Zero Telemetry</strong></span>
+          <span class="keyword-pill"><strong>SHA-256</strong> Verified Updates</span>
+        </div>
+
+        <!-- ── Interactive Widget Preview ── -->
+        <div class="showcase-wrap" id="preview">
+          <div class="showcase-controls">
+            <div class="tab-group" role="tablist" aria-label="Platform preview">
+              <button type="button" role="tab" aria-selected="true" class="tab-btn active" id="tab-win" onclick="setPlatform('win')">
+                Windows Bar
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="tab-btn" id="tab-mac" onclick="setPlatform('mac')">
+                macOS Menu Bar
+              </button>
+            </div>
+
+            <div class="tab-group" role="tablist" aria-label="Match state simulation">
+              <button type="button" role="tab" aria-selected="true" class="tab-btn active" id="state-live" onclick="setMatchState('live')">
+                Live (45s)
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="tab-btn" id="state-paused" onclick="setMatchState('paused')">
+                Stumps / Break
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="tab-btn" id="state-today" onclick="setMatchState('today')">
+                Today (5m)
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="tab-btn" id="state-completed" onclick="setMatchState('completed')">
+                Completed
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="tab-btn" id="state-delayed" onclick="setMatchState('delayed')">
+                Stale-Safe
+              </button>
+            </div>
+          </div>
+
+          <div class="desktop-stage">
+            <!-- Windows Preview Mode -->
+            <div id="preview-win">
+              <div class="win-floating-bar">
+                <span class="win-grip" aria-hidden="true">⋮</span>
+                <span class="win-status" id="win-bar-status" style="color: #ef6262;">📌 LIVE</span>
+                <span class="win-divider-v" aria-hidden="true"></span>
+                <span class="win-score-text" id="win-bar-text">PAK 172/4 (18.4)  ·  AUS 196/7 (20)</span>
+                <button type="button" class="win-btn" id="win-prev-btn" onclick="cycleMatch(-1)" aria-label="Previous match" title="Previous match">◀</button>
+                <button type="button" class="win-btn" id="win-next-btn" onclick="cycleMatch(1)" aria-label="Next match" title="Next match">▶</button>
+                <button type="button" class="win-btn" id="win-details-btn" aria-expanded="true" aria-controls="win-popup" onclick="toggleDetailsPopup()">Matches (2) ▾</button>
+              </div>
+
+              <div class="win-details-popup" id="win-popup">
+                <div class="win-popup-header">
+                  <div class="win-popup-title">Match Center</div>
+                  <div class="win-popup-fresh" id="win-popup-fresh">Updated 12s ago</div>
+                </div>
+
+                <div class="win-scope-row">
+                  <button type="button" class="win-pill active" id="feed-team" aria-pressed="true" onclick="setFeed('team')">My Team: Pakistan</button>
+                  <button type="button" class="win-pill" id="change-team-btn" aria-expanded="false" aria-controls="win-team-grid" onclick="toggleTeamGrid()">Change Team ▾</button>
+                  <button type="button" class="win-pill" id="feed-intl" aria-pressed="false" onclick="setFeed('international')">International</button>
+                </div>
+
+                <div class="win-team-grid" id="win-team-grid">
+                  <button type="button" class="win-pill active" onclick="pickTeam('Pakistan')">Pakistan (+ PSL)</button>
+                  <button type="button" class="win-pill" onclick="pickTeam('India')">India (+ IPL)</button>
+                  <button type="button" class="win-pill" onclick="pickTeam('Australia')">Australia (+ BBL)</button>
+                  <button type="button" class="win-pill" onclick="pickTeam('England')">England (+ Hundred)</button>
+                  <button type="button" class="win-pill" onclick="pickTeam('South Africa')">South Africa (+ SA20)</button>
+                  <button type="button" class="win-pill" onclick="pickTeam('Bangladesh')">Bangladesh (+ BPL)</button>
+                </div>
+
+                <div class="win-pill-row" id="win-pills">
+                  <button type="button" class="win-pill active">All</button>
+                  <button type="button" class="win-pill">Pakistan</button>
+                  <button type="button" class="win-pill">PSL</button>
+                </div>
+
+                <div class="win-match-card">
+                  <div class="win-card-header">
+                    <div class="win-card-state" id="win-card1-state" style="color: #ef6262;">LIVE</div>
+                    <span class="win-strip-badge" id="win-strip-badge">📌 ON LIVE STRIP</span>
+                  </div>
+                  <div class="win-card-teams" id="win-card1-teams">Pakistan vs Australia</div>
+                  <div class="win-card-series" id="win-card1-series">Pakistan · Australia tour of Pakistan</div>
+                  <div id="win-card1-scores">
+                    <div class="win-card-score-row">PAK &nbsp;&nbsp;&nbsp;172/4 (18.4 ov)</div>
+                    <div class="win-card-score-row">AUS &nbsp;&nbsp;&nbsp;196/7 (20 ov)</div>
+                  </div>
+                  <div class="win-card-status" id="win-card1-status">Pakistan need 25 runs in 8 balls</div>
+                  <div class="win-card-actions">
+                    <button type="button" class="win-btn" id="pin-btn-1" onclick="togglePin()">✓ Showing on Live Strip (Click to Auto)</button>
+                    <div class="win-card-actions-right">
+                      <button type="button" class="win-btn" id="win-more-btn" aria-expanded="true" aria-controls="win-detail-drawer" onclick="toggleCardDetails()">Less ▴</button>
+                      <a href="#download" class="win-btn" title="Opens match scorecard in browser from the desktop app">Match Page ↗</a>
+                    </div>
+                  </div>
+                  <div class="win-detail-drawer" id="win-detail-drawer"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- macOS Preview Mode -->
+            <div class="mac-preview-container" id="preview-mac">
+              <div class="mac-menubar">
+                <div class="mac-menubar-left">
+                  <span aria-hidden="true"></span>
+                  <strong>Code</strong>
+                  <span class="mac-menu-app-only">File</span>
+                  <span class="mac-menu-app-only">Edit</span>
+                  <span class="mac-menu-app-only">View</span>
+                </div>
+                <div class="mac-menubar-right">
+                  <span class="mac-widget-pill" id="mac-bar-title">LIVE · PAK 172/4 (18.4) · AUS 196/7 (20)</span>
+                </div>
+              </div>
+
+              <div class="mac-dropdown">
+                <div class="mac-menu-item muted" id="mac-menu-state">LIVE · Pakistan (+ PSL) · Updated 12s ago</div>
+                <div class="mac-divider"></div>
+                <div class="mac-menu-item" id="mac-menu-teams"><strong>✓ [Pakistan] Pakistan vs Australia (LIVE)</strong></div>
+                <div class="mac-menu-item muted" id="mac-menu-score1">&nbsp;&nbsp;PAK 172/4  18.4 overs</div>
+                <div class="mac-menu-item muted" id="mac-menu-score2">&nbsp;&nbsp;AUS 196/7  20 overs</div>
+                <div class="mac-menu-item muted" id="mac-menu-status">Pakistan need 25 runs in 8 balls</div>
+                <div class="mac-menu-item muted" id="mac-menu-bat">&emsp;Bat: Rizwan 58* (34) · Shadab 24* (12)</div>
+                <div class="mac-menu-item muted" id="mac-menu-bowl">&emsp;Bowl: Starc 3.4-0-34-1 · Econ 9.27</div>
+                <div class="mac-menu-item muted" id="mac-menu-balls">&emsp;Overs: 1 4 0 W 6 2</div>
+                <div class="mac-divider"></div>
+                <div class="mac-menu-item muted" id="mac-menu-feed-intl">Feed: International &amp; Leagues</div>
+                <div class="mac-menu-item muted" id="mac-menu-feed-team">✓ Feed: Pick a Team ▸</div>
+                <div class="mac-menu-item muted">Refresh now</div>
+                <div class="mac-menu-item muted">Open Match Page</div>
+                <div class="mac-menu-item muted">Quit</div>
+              </div>
+
+              <div class="mac-feed-bar">
+                <button type="button" class="win-pill active" id="mac-feed-team" onclick="setFeed('team')">My Team Mode</button>
+                <button type="button" class="win-pill" id="mac-feed-intl" onclick="setFeed('international')">International Mode</button>
+              </div>
+            </div>
+
+            <div class="stage-caption">
+              <span>Interactive UI replica</span>
+              <span>Click tabs above to preview states</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Key Highlights (Concise & Keyword-Focused) ── -->
+    <section id="features">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Built for Focus.</h2>
+          <p class="section-desc">
+            Essential match data without distractions.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-tag">Team &amp; Global Scope</span>
+            <h3>My Team or International</h3>
+            <p>
+              Follow your national side (+ its T20/Hundred league) or switch to <strong>senior internationals &amp; 6 leagues</strong> (PSL, IPL, BPL, BBL, SA20, The Hundred).
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <span class="feature-tag">Match Center &amp; Live Details</span>
+            <h3>Score Strip Minimal, Full Detail on Click</h3>
+            <p>
+              Keep the strip clutter-free, then expand <strong>More ▾</strong> for batters, bowler, last wicket, recent overs, and live run rates—or pin any match focus-free.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <span class="feature-tag">Break Detection</span>
+            <h3>Stumps, Lunch &amp; Rain Delay</h3>
+            <p>
+              Displays <strong>STUMPS, LUNCH, TEA, INNINGS BREAK, RAIN DELAY &amp; BAD LIGHT</strong> instead of false LIVE, with chronological Test innings &amp; declarations (<code>434/9d</code>).
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <span class="feature-tag">Smart Polling</span>
+            <h3>Adaptive Refresh Cadence</h3>
+            <p>
+              Refreshes every <strong>45s live</strong>, <strong>2m during breaks/delays</strong>, <strong>5m at Stumps or match day</strong>, and <strong>30m</strong> when idle.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <span class="feature-tag">Self-Updating</span>
+            <h3>SHA-256 Portable Updater</h3>
+            <p>
+              One-click Windows updates with <strong>digest verification</strong>, backup, stale update cleanup, and <strong>automatic rollback</strong>.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <span class="feature-tag">Resilient &amp; Private</span>
+            <h3>Stale-Safe, Zero Telemetry</h3>
+            <p>
+              <strong>Retains the last reliable score</strong> during temporary feed outages, requires <strong>no API keys</strong>, and saves your team and layout locally.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Downloads & Platform Breakdown ── -->
+    <section id="download">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Unzip and Run.</h2>
+          <p class="section-desc">
+            No installer, admin rights, or Python setup required.
+          </p>
+        </div>
+
+        <div class="platform-grid">
+          <!-- Windows Card -->
+          <div class="platform-card" id="card-win">
+            <div>
+              <div class="platform-header">
+                <h3 class="platform-title">Windows</h3>
+                <span class="os-badge" id="badge-win">Windows 10 / 11</span>
+              </div>
+
+              <div class="steps-line">
+                Unzip <strong>CricketTray-Windows.zip</strong> → Run <strong>CricketTray.exe</strong>
+              </div>
+
+              <ul class="platform-list">
+                <li><strong>Floating score bar (◀ / ▶ cycle)</strong> + system tray icon</li>
+                <li><strong>Match Center filters</strong>, expandable batters/bowlers &amp; strip pinning</li>
+                <li><strong>One-click in-app updates</strong> with rollback protection</li>
+              </ul>
+            </div>
+
+            <a href="https://github.com/mabs7/cricket-tray/releases/latest/download/CricketTray-Windows.zip" class="btn btn-win" style="justify-content: center; width: 100%;">
+              <span>Download for Windows (.zip)</span>
+            </a>
+          </div>
+
+          <!-- macOS Card -->
+          <div class="platform-card" id="card-mac">
+            <div>
+              <div class="platform-header">
+                <h3 class="platform-title">macOS</h3>
+                <span class="os-badge" id="badge-mac">macOS Menu Bar</span>
+              </div>
+
+              <div class="steps-line">
+                Unzip <strong>CricketTray-Mac.zip</strong> → Open <strong>CricketTray.app</strong>
+              </div>
+
+              <ul class="platform-list">
+                <li><strong>Live menu bar ticker</strong> with STUMPS &amp; break labels</li>
+                <li><strong>Batters, bowler &amp; recent balls</strong> right inside the dropdown</li>
+                <li><strong>Release notifications</strong> when updates ship</li>
+              </ul>
+            </div>
+
+            <a href="https://github.com/mabs7/cricket-tray/releases/latest/download/CricketTray-Mac.zip" class="btn btn-mac" style="justify-content: center; width: 100%;">
+              <span>Download for macOS (.zip)</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Quick FAQ ── -->
+    <section id="faq">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Quick Answers.</h2>
+          <p class="section-desc">
+            First-run security prompts, feed modes, and privacy.
+          </p>
+        </div>
+
+        <div class="faq-grid">
+          <article class="faq-card">
+            <h3>Windows SmartScreen or macOS Gatekeeper?</h3>
+            <p>
+              Releases are unsigned so the widget stays free. On Windows, click <strong>More info → Run anyway</strong>. On macOS, open <strong>System Settings → Privacy &amp; Security</strong> and allow <code>CricketTray.app</code>.
+            </p>
+          </article>
+
+          <article class="faq-card">
+            <h3>How do I switch teams or leagues?</h3>
+            <p>
+              Open <strong>Match Center</strong> on Windows (or the menu bar dropdown on macOS) anytime to pick any of the 12 supported teams or switch to <strong>International &amp; 6 Major Leagues</strong>.
+            </p>
+          </article>
+
+          <article class="faq-card">
+            <h3>How do updates and settings work?</h3>
+            <p>
+              Preferences live locally in <code>CricketTray/settings.json</code> (migrated automatically from legacy <code>PakCricket</code> builds). Windows verifies release ZIPs via <strong>SHA-256</strong> with automatic rollback.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── About the Developer ── -->
+    <section id="developer">
+      <div class="container">
+        <div class="dev-card">
+          <div class="dev-top">
+            <div class="dev-avatar" aria-hidden="true">MA</div>
+            <div class="dev-identity">
+              <h2>Muhammad Abubakar</h2>
+              <div class="dev-handle">@mabs7 · Software Developer</div>
+            </div>
+          </div>
+
+          <p class="dev-bio">
+            Originally built to follow <strong>Pakistan &amp; PSL cricket</strong> while coding—now renamed <strong>Cricket Tray</strong> for <strong>senior international matches and 6 major T20/Hundred leagues</strong> without heavy browser tabs, ad-cluttered scoreboards, or paid API keys. <strong>Fast, lightweight, and 100% free.</strong>
+          </p>
+
+          <div class="dev-links">
+            <a href="https://abubakar144-portfolio.netlify.app" target="_blank" rel="noopener" class="btn btn-neutral">
+              <span>Visit Portfolio ↗</span>
+            </a>
+
+            <a href="https://github.com/mabs7" target="_blank" rel="noopener" class="btn btn-neutral">
+              <span>GitHub (@mabs7)</span>
+            </a>
+
+            <a href="https://github.com/mabs7/cricket-tray/releases/latest" target="_blank" rel="noopener" class="btn btn-neutral">
+              <span>Latest Releases</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div class="container footer-inner">
+      <div>
+        Cricket Tray · Built by <a href="https://abubakar144-portfolio.netlify.app" target="_blank" rel="noopener"><strong>Muhammad Abubakar</strong></a>
+      </div>
+      <div class="footer-links">
+        <a href="https://abubakar144-portfolio.netlify.app" target="_blank" rel="noopener">Portfolio</a>
+        <a href="https://github.com/mabs7/cricket-tray" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/mabs7/cricket-tray/releases/latest" target="_blank" rel="noopener">Releases</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const TEAM_LEAGUES = {
+      "Pakistan": "PSL",
+      "India": "IPL",
+      "Australia": "BBL",
+      "England": "The Hundred",
+      "South Africa": "SA20",
+      "Bangladesh": "BPL"
+    };
+
+    const TEAM_FIXTURES = {
+      "Pakistan": {
+        teams: "Pakistan vs Australia",
+        leagueTeams: "Lahore Qalandars vs Karachi Kings",
+        series: "Pakistan · Australia tour of Pakistan",
+        leagueSeries: "PSL · Pakistan Super League",
+        barText: "PAK 172/4 (18.4)  ·  AUS 196/7 (20)",
+        scoresHtml:
+          '<div class="win-card-score-row">PAK &nbsp;&nbsp;&nbsp;172/4 (18.4 ov)</div>' +
+          '<div class="win-card-score-row">AUS &nbsp;&nbsp;&nbsp;196/7 (20 ov)</div>',
+        status: "Pakistan need 25 runs in 8 balls",
+        macTitle: "LIVE · PAK 172/4 (18.4) · AUS 196/7 (20)",
+        macItem: "✓ [Pakistan] Pakistan vs Australia (LIVE)",
+        macScore1: "  PAK 172/4  18.4 overs",
+        macScore2: "  AUS 196/7  20 overs",
+        details: {
+          strip: "CRR 9.21  ·  RRR 18.75  ·  Partnership 46 (24)",
+          bat: ["Rizwan*     58 (34)", "Shadab      24 (12)"],
+          bowl: ["Starc*  3.4-0-34-1 · 9.27", "Zampa   4.0-0-29-2 · 7.25"],
+          wicket: "Last wkt: Salman Agha b Zampa 19 (11)",
+          balls: ["1", "4", "0", "W", "6", "2"]
+        }
+      },
+      "India": {
+        teams: "India vs England",
+        leagueTeams: "Chennai Super Kings vs Mumbai Indians",
+        series: "India · England tour of India",
+        leagueSeries: "IPL · Indian Premier League",
+        barText: "IND 168/3 (17.2)  ·  ENG 184/6 (20)",
+        scoresHtml:
+          '<div class="win-card-score-row">IND &nbsp;&nbsp;&nbsp;168/3 (17.2 ov)</div>' +
+          '<div class="win-card-score-row">ENG &nbsp;&nbsp;&nbsp;184/6 (20 ov)</div>',
+        status: "India need 17 runs in 16 balls",
+        macTitle: "LIVE · IND 168/3 (17.2) · ENG 184/6 (20)",
+        macItem: "✓ [India] India vs England (LIVE)",
+        macScore1: "  IND 168/3  17.2 overs",
+        macScore2: "  ENG 184/6  20 overs",
+        details: {
+          strip: "CRR 9.69  ·  RRR 6.38  ·  Partnership 52 (29)",
+          bat: ["Suryakumar* 61 (32)", "Pandya      27 (15)"],
+          bowl: ["Archer* 3.2-0-28-1 · 8.40", "Rashid  4.0-0-31-1 · 7.75"],
+          wicket: "Last wkt: Tilak Varma c Salt b Rashid 28 (19)",
+          balls: ["1", "0", "4", "1", "6", "2"]
+        }
+      },
+      "Australia": {
+        teams: "Australia vs South Africa",
+        leagueTeams: "Sydney Sixers vs Perth Scorchers",
+        series: "Australia · South Africa tour of Australia",
+        leagueSeries: "BBL · Big Bash League",
+        barText: "AUS 241/5 (42.0)  ·  SA 268/9 (50)",
+        scoresHtml:
+          '<div class="win-card-score-row">AUS &nbsp;&nbsp;&nbsp;241/5 (42 ov)</div>' +
+          '<div class="win-card-score-row">SA &nbsp;&nbsp;&nbsp;&nbsp;268/9 (50 ov)</div>',
+        status: "Australia need 28 runs in 48 balls",
+        macTitle: "LIVE · AUS 241/5 (42) · SA 268/9 (50)",
+        macItem: "✓ [Australia] Australia vs South Africa (LIVE)",
+        macScore1: "  AUS 241/5  42 overs",
+        macScore2: "  SA 268/9  50 overs",
+        details: {
+          strip: "CRR 5.74  ·  RRR 3.50  ·  Partnership 64 (58)",
+          bat: ["Carey*      54 (49)", "Maxwell     31 (22)"],
+          bowl: ["Rabada* 8.0-0-45-2 · 5.62", "Maharaj 9.0-1-41-1 · 4.56"],
+          wicket: "Last wkt: Marsh lbw Maharaj 72 (76)",
+          balls: ["0", "1", "4", "0", "1", "2"]
+        }
+      },
+      "England": {
+        teams: "England vs New Zealand",
+        leagueTeams: "Oval Invincibles vs Southern Brave",
+        series: "England · New Zealand tour of England",
+        leagueSeries: "The Hundred · Men's Competition",
+        barText: "ENG 154/4 (16.1)  ·  NZ 179/6 (20)",
+        scoresHtml:
+          '<div class="win-card-score-row">ENG &nbsp;&nbsp;&nbsp;154/4 (16.1 ov)</div>' +
+          '<div class="win-card-score-row">NZ &nbsp;&nbsp;&nbsp;&nbsp;179/6 (20 ov)</div>',
+        status: "England need 26 runs in 23 balls",
+        macTitle: "LIVE · ENG 154/4 (16.1) · NZ 179/6 (20)",
+        macItem: "✓ [England] England vs New Zealand (LIVE)",
+        macScore1: "  ENG 154/4  16.1 overs",
+        macScore2: "  NZ 179/6  20 overs",
+        details: {
+          strip: "CRR 9.53  ·  RRR 6.78  ·  Partnership 41 (21)",
+          bat: ["Brook*      49 (27)", "Livingstone 18 (10)"],
+          bowl: ["Santner* 3.1-0-25-2 · 7.89", "Henry   4.0-0-36-1 · 9.00"],
+          wicket: "Last wkt: Butler c Conway b Santner 44 (28)",
+          balls: ["4", "1", "0", "2", "6", "1"]
+        }
+      },
+      "South Africa": {
+        teams: "South Africa vs India",
+        leagueTeams: "MI Cape Town vs Paarl Royals",
+        series: "South Africa · India tour of South Africa",
+        leagueSeries: "SA20 · Season 2026",
+        barText: "SA 148/3 (15.0)  ·  IND 176/5 (20)",
+        scoresHtml:
+          '<div class="win-card-score-row">SA &nbsp;&nbsp;&nbsp;&nbsp;148/3 (15 ov)</div>' +
+          '<div class="win-card-score-row">IND &nbsp;&nbsp;&nbsp;176/5 (20 ov)</div>',
+        status: "South Africa need 29 runs in 30 balls",
+        macTitle: "LIVE · SA 148/3 (15) · IND 176/5 (20)",
+        macItem: "✓ [South Africa] South Africa vs India (LIVE)",
+        macScore1: "  SA 148/3  15 overs",
+        macScore2: "  IND 176/5  20 overs",
+        details: {
+          strip: "CRR 9.87  ·  RRR 5.80  ·  Partnership 59 (31)",
+          bat: ["Klaasen*    52 (24)", "Miller      21 (13)"],
+          bowl: ["Bumrah* 3.0-0-19-1 · 6.33", "Varun   3.0-0-27-1 · 9.00"],
+          wicket: "Last wkt: Markram b Varun 38 (25)",
+          balls: ["6", "1", "4", "0", "1", "4"]
+        }
+      },
+      "Bangladesh": {
+        teams: "Bangladesh vs Sri Lanka",
+        leagueTeams: "Comilla Victorians vs Rangpur Riders",
+        series: "Bangladesh · Sri Lanka tour of Bangladesh",
+        leagueSeries: "BPL · Bangladesh Premier League",
+        barText: "BAN 161/5 (18.2)  ·  SL 174/8 (20)",
+        scoresHtml:
+          '<div class="win-card-score-row">BAN &nbsp;&nbsp;&nbsp;161/5 (18.2 ov)</div>' +
+          '<div class="win-card-score-row">SL &nbsp;&nbsp;&nbsp;&nbsp;174/8 (20 ov)</div>',
+        status: "Bangladesh need 14 runs in 10 balls",
+        macTitle: "LIVE · BAN 161/5 (18.2) · SL 174/8 (20)",
+        macItem: "✓ [Bangladesh] Bangladesh vs Sri Lanka (LIVE)",
+        macScore1: "  BAN 161/5  18.2 overs",
+        macScore2: "  SL 174/8  20 overs",
+        details: {
+          strip: "CRR 8.78  ·  RRR 8.40  ·  Partnership 33 (18)",
+          bat: ["Hridoy*     46 (26)", "Jaker Ali   19 (11)"],
+          bowl: ["Pathirana* 3.2-0-29-2 · 8.70", "Hasaranga 4.0-0-30-2 · 7.50"],
+          wicket: "Last wkt: Litton c Mendis b Hasaranga 39 (24)",
+          balls: ["1", "W", "2", "4", "1", "6"]
+        }
+      }
+    };
+
+    const FEEDS = {
+      team: {
+        live: [
+          null,
+          {
+            category: "PSL",
+            label: "LIVE",
+            color: "#ef6262",
+            teams: "Lahore Qalandars vs Karachi Kings",
+            series: "PSL · Pakistan Super League",
+            barText: "LQ 158/3 (16.4)  ·  KK 176/7 (20)",
+            freshness: "Updated 18s ago",
+            cardState: "LIVE",
+            scoresHtml:
+              '<div class="win-card-score-row">LQ &nbsp;&nbsp;&nbsp;&nbsp;158/3 (16.4 ov)</div>' +
+              '<div class="win-card-score-row">KK &nbsp;&nbsp;&nbsp;&nbsp;176/7 (20 ov)</div>',
+            status: "Lahore Qalandars need 19 runs in 20 balls",
+            macTitle: "LIVE · LQ 158/3 (16.4) · KK 176/7 (20)",
+            macItem: "✓ [PSL] Lahore Qalandars vs Karachi Kings (LIVE)",
+            macScore1: "  LQ 158/3  16.4 overs",
+            macScore2: "  KK 176/7  20 overs"
+          }
+        ],
+        paused: [
+          {
+            category: "Pakistan",
+            label: "STUMPS",
+            color: "#7ec8f8",
+            teams: "Pakistan vs Sri Lanka",
+            series: "Pakistan · Sri Lanka tour of Pakistan",
+            barText: "PAK 434/9d (106.3)  ·  SL 446/10 (117.2)  ·  PAK 109/4 (38.3)",
+            freshness: "Updated 1m ago",
+            cardState: "STUMPS",
+            scoresHtml:
+              '<div class="win-card-score-row">PAK &nbsp;&nbsp;&nbsp;434/9d (106.3 ov)</div>' +
+              '<div class="win-card-score-row">SL &nbsp;&nbsp;&nbsp;&nbsp;446/10 (117.2 ov)</div>' +
+              '<div class="win-card-score-row">PAK &nbsp;&nbsp;&nbsp;109/4 (38.3 ov)</div>',
+            status: "Day 3: Stumps - Pakistan lead by 97 runs",
+            macTitle: "STUMPS · PAK 434/9d (106.3) · SL 446/10",
+            macItem: "✓ [Pakistan] Pakistan vs Sri Lanka (STUMPS)",
+            macScore1: "  PAK 434/9d  106.3 overs",
+            macScore2: "  SL 446/10  117.2 overs"
+          }
+        ],
+        today: [
+          {
+            category: "PSL",
+            label: "TODAY",
+            color: "#f0b95c",
+            teams: "Lahore Qalandars vs Karachi Kings",
+            series: "PSL · Pakistan Super League",
+            barText: "Lahore Qalandars vs Karachi Kings · 19:30",
+            freshness: "Updated 2m ago",
+            cardState: "TODAY",
+            scoresHtml: "",
+            status: "Starts Today, 19:30 PKT · Gaddafi Stadium, Lahore",
+            macTitle: "TODAY · LQ vs KK · 19:30",
+            macItem: "✓ [PSL] Lahore Qalandars vs Karachi Kings (TODAY)",
+            macScore1: "  Starts Today, 19:30 PKT",
+            macScore2: "  PSL · Pakistan Super League"
+          }
+        ],
+        completed: [
+          {
+            category: "Pakistan",
+            label: "COMPLETED",
+            color: "#92a3b8",
+            teams: "Pakistan vs Australia",
+            series: "Pakistan · Australia tour of Pakistan",
+            barText: "PAK 198/5 (19.2)  ·  AUS 194/6 (20)",
+            freshness: "Updated 8m ago",
+            cardState: "COMPLETED",
+            scoresHtml:
+              '<div class="win-card-score-row">PAK &nbsp;&nbsp;&nbsp;198/5 (19.2 ov)</div>' +
+              '<div class="win-card-score-row">AUS &nbsp;&nbsp;&nbsp;194/6 (20 ov)</div>',
+            status: "Pakistan won by 5 wickets",
+            macTitle: "COMPLETED · PAK 198/5 (19.2) · AUS 194/6 (20)",
+            macItem: "✓ [Pakistan] Pakistan vs Australia (COMPLETED)",
+            macScore1: "  PAK 198/5  19.2 overs",
+            macScore2: "  AUS 194/6  20 overs"
+          }
+        ],
+        delayed: [
+          {
+            category: "Pakistan",
+            label: "DELAYED",
+            color: "#92a3b8",
+            teams: "Pakistan vs Australia",
+            series: "Pakistan · Australia tour of Pakistan",
+            barText: "PAK 172/4 (18.4)  ·  AUS 196/7 (20)",
+            freshness: "Updates delayed · last success 1m 15s ago",
+            cardState: "LIVE · STALE-SAFE",
+            scoresHtml:
+              '<div class="win-card-score-row">PAK &nbsp;&nbsp;&nbsp;172/4 (18.4 ov)</div>' +
+              '<div class="win-card-score-row">AUS &nbsp;&nbsp;&nbsp;196/7 (20 ov)</div>',
+            status: "Pakistan need 25 runs in 8 balls (Snapshot retained)",
+            macTitle: "⚠ LIVE · PAK 172/4 (18.4) · AUS 196/7 (20)",
+            macItem: "✓ [Pakistan] Pakistan vs Australia (LIVE)",
+            macScore1: "  PAK 172/4  18.4 overs",
+            macScore2: "  AUS 196/7  20 overs"
+          }
+        ]
+      },
+      international: {
+        pills: ["All", "International", "PSL", "IPL", "BPL", "BBL", "SA20", "The Hundred"],
+        macScope: "International & Leagues",
+        live: [
+          {
+            category: "International",
+            label: "LIVE",
+            color: "#ef6262",
+            teams: "England vs Australia",
+            series: "International · England tour of Australia",
+            barText: "AUS 288/10 (71.4)  ·  ENG 164/3 (42)",
+            freshness: "Updated 15s ago",
+            cardState: "LIVE",
+            scoresHtml:
+              '<div class="win-card-score-row">AUS &nbsp;&nbsp;&nbsp;288/10 (71.4 ov)</div>' +
+              '<div class="win-card-score-row">ENG &nbsp;&nbsp;&nbsp;164/3 (42 ov)</div>',
+            status: "Day 2: England trail by 124 runs",
+            macTitle: "LIVE · AUS 288/10 (71.4) · ENG 164/3 (42)",
+            macItem: "✓ [International] England vs Australia (LIVE)",
+            macScore1: "  AUS 288/10  71.4 overs",
+            macScore2: "  ENG 164/3  42 overs"
+          },
+          {
+            category: "IPL",
+            label: "LIVE",
+            color: "#ef6262",
+            teams: "Chennai Super Kings vs Mumbai Indians",
+            series: "IPL · Indian Premier League",
+            barText: "CSK 165/4 (17.5)  ·  MI 181/6 (20)",
+            freshness: "Updated 15s ago",
+            cardState: "LIVE",
+            scoresHtml:
+              '<div class="win-card-score-row">CSK &nbsp;&nbsp;&nbsp;165/4 (17.5 ov)</div>' +
+              '<div class="win-card-score-row">MI &nbsp;&nbsp;&nbsp;&nbsp;181/6 (20 ov)</div>',
+            status: "CSK need 17 runs in 13 balls",
+            macTitle: "LIVE · CSK 165/4 (17.5) · MI 181/6 (20)",
+            macItem: "✓ [IPL] CSK vs Mumbai Indians (LIVE)",
+            macScore1: "  CSK 165/4  17.5 overs",
+            macScore2: "  MI 181/6  20 overs"
+          }
+        ],
+        paused: [
+          {
+            category: "International",
+            label: "BAD LIGHT",
+            color: "#7ec8f8",
+            teams: "New Zealand vs India",
+            series: "International · India tour of New Zealand",
+            barText: "NZ 312/10 (89.2)  ·  IND 214/5 (64)",
+            freshness: "Updated 48s ago",
+            cardState: "BAD LIGHT",
+            scoresHtml:
+              '<div class="win-card-score-row">NZ &nbsp;&nbsp;&nbsp;&nbsp;312/10 (89.2 ov)</div>' +
+              '<div class="win-card-score-row">IND &nbsp;&nbsp;&nbsp;214/5 (64 ov)</div>',
+            status: "Day 2: Play stopped due to bad light",
+            macTitle: "BAD LIGHT · NZ 312/10 · IND 214/5 (64)",
+            macItem: "✓ [International] New Zealand vs India (BAD LIGHT)",
+            macScore1: "  NZ 312/10  89.2 overs",
+            macScore2: "  IND 214/5  64 overs"
+          }
+        ],
+        today: [
+          {
+            category: "SA20",
+            label: "TODAY",
+            color: "#f0b95c",
+            teams: "MI Cape Town vs Paarl Royals",
+            series: "SA20 · Season 2026",
+            barText: "MI Cape Town vs Paarl Royals · 20:30",
+            freshness: "Updated 3m ago",
+            cardState: "TODAY",
+            scoresHtml: "",
+            status: "Starts Today, 20:30 PKT · Newlands, Cape Town",
+            macTitle: "TODAY · MICT vs PR · 20:30",
+            macItem: "✓ [SA20] MI Cape Town vs Paarl Royals (TODAY)",
+            macScore1: "  Starts Today, 20:30 PKT",
+            macScore2: "  SA20 · Newlands, Cape Town"
+          }
+        ],
+        completed: [
+          {
+            category: "International",
+            label: "COMPLETED",
+            color: "#92a3b8",
+            teams: "West Indies vs Bangladesh",
+            series: "International · Bangladesh tour of West Indies",
+            barText: "WI 398/6d (93)  ·  BAN 240/10 (71)",
+            freshness: "Updated 6m ago",
+            cardState: "COMPLETED",
+            scoresHtml:
+              '<div class="win-card-score-row">WI &nbsp;&nbsp;&nbsp;&nbsp;398/6d (93 ov)</div>' +
+              '<div class="win-card-score-row">BAN &nbsp;&nbsp;&nbsp;240/10 (71 ov)</div>',
+            status: "West Indies won by 158 runs",
+            macTitle: "COMPLETED · WI 398/6d · BAN 240/10",
+            macItem: "✓ [International] West Indies vs Bangladesh (COMPLETED)",
+            macScore1: "  WI 398/6d  93 overs",
+            macScore2: "  BAN 240/10  71 overs"
+          }
+        ],
+        delayed: [
+          {
+            category: "International",
+            label: "DELAYED",
+            color: "#92a3b8",
+            teams: "England vs Australia",
+            series: "International · England tour of Australia",
+            barText: "AUS 288/10 (71.4)  ·  ENG 164/3 (42)",
+            freshness: "Updates delayed · last success 1m 15s ago",
+            cardState: "LIVE · STALE-SAFE",
+            scoresHtml:
+              '<div class="win-card-score-row">AUS &nbsp;&nbsp;&nbsp;288/10 (71.4 ov)</div>' +
+              '<div class="win-card-score-row">ENG &nbsp;&nbsp;&nbsp;164/3 (42 ov)</div>',
+            status: "Day 2: England trail by 124 runs (Snapshot retained)",
+            macTitle: "⚠ LIVE · AUS 288/10 · ENG 164/3 (42)",
+            macItem: "✓ [International] England vs Australia (LIVE)",
+            macScore1: "  AUS 288/10  71.4 overs",
+            macScore2: "  ENG 164/3  42 overs"
+          }
+        ]
+      }
+    };
+
+    let currentFeed = "team";
+    let currentTeam = "Pakistan";
+    let currentState = "live";
+    let currentCategory = "All";
+    let matchIndex = 0;
+    let teamGridOpen = false;
+    let pinned = true;
+    let detailsOpen = true;
+
+    function teamLiveMatch() {
+      const f = TEAM_FIXTURES[currentTeam] || TEAM_FIXTURES["Pakistan"];
+      return Object.assign({
+        category: currentTeam,
+        label: "LIVE",
+        color: "#ef6262",
+        freshness: "Updated 12s ago",
+        cardState: "LIVE"
+      }, f);
+    }
+
+    function teamLeagueMatch() {
+      const f = TEAM_FIXTURES[currentTeam] || TEAM_FIXTURES["Pakistan"];
+      const league = TEAM_LEAGUES[currentTeam];
+      return {
+        category: league,
+        label: "LIVE",
+        color: "#ef6262",
+        teams: f.leagueTeams,
+        series: f.leagueSeries,
+        barText: f.leagueTeams + " · LIVE",
+        freshness: "Updated 18s ago",
+        cardState: "LIVE",
+        scoresHtml: f.scoresHtml,
+        status: league + " featured fixture",
+        macTitle: "LIVE · " + f.leagueTeams,
+        macItem: "✓ [" + league + "] " + f.leagueTeams + " (LIVE)",
+        macScore1: f.macScore1,
+        macScore2: f.macScore2,
+        details: f.details
+      };
+    }
+
+    function activePills() {
+      if (currentFeed === "team") {
+        const league = TEAM_LEAGUES[currentTeam];
+        return league ? ["All", currentTeam, league] : ["All", currentTeam];
+      }
+      return FEEDS.international.pills;
+    }
+
+    function activeMatches() {
+      const pool = currentFeed === "team"
+        ? (currentState === "live" ? [teamLiveMatch(), teamLeagueMatch()] : FEEDS.team[currentState])
+        : FEEDS.international[currentState];
+      if (!pool || !pool.length) return [];
+      if (currentCategory === "All") return pool;
+      const filtered = pool.filter(m => m.category === currentCategory);
+      return filtered.length ? filtered : pool;
+    }
+
+    function renderPreview() {
+      const pills = activePills();
+      if (!pills.includes(currentCategory)) currentCategory = "All";
+      const pool = activeMatches();
+      if (matchIndex >= pool.length || matchIndex < 0) matchIndex = 0;
+      const s = pool[matchIndex];
+      if (!s) return;
+
+      const isTeam = currentFeed === "team";
+      const feedTeamBtn = document.getElementById("feed-team");
+      const feedIntlBtn = document.getElementById("feed-intl");
+      feedTeamBtn.textContent = "My Team: " + currentTeam;
+      feedTeamBtn.classList.toggle("active", isTeam);
+      feedTeamBtn.setAttribute("aria-pressed", String(isTeam));
+      feedIntlBtn.classList.toggle("active", !isTeam);
+      feedIntlBtn.setAttribute("aria-pressed", String(!isTeam));
+
+      document.getElementById("mac-feed-team").classList.toggle("active", isTeam);
+      document.getElementById("mac-feed-intl").classList.toggle("active", !isTeam);
+      document.getElementById("mac-menu-feed-intl").textContent = (isTeam ? "" : "✓ ") + "Feed: International & Leagues";
+      document.getElementById("mac-menu-feed-team").textContent = (isTeam ? "✓ " : "") + "Feed: Pick a Team ▸";
+
+      document.getElementById("win-pills").innerHTML = pills
+        .map(pill => `<button type="button" class="win-pill${pill === currentCategory ? " active" : ""}" onclick="setCategory('${pill}')">${pill}</button>`)
+        .join("");
+
+      const teamButtons = document.querySelectorAll("#win-team-grid button");
+      teamButtons.forEach(btn => {
+        btn.classList.toggle("active", btn.textContent.startsWith(currentTeam));
+      });
+
+      ["live", "paused", "today", "completed", "delayed"].forEach(id => {
+        const el = document.getElementById("state-" + id);
+        const active = id === currentState;
+        el.classList.toggle("active", active);
+        el.setAttribute("aria-selected", String(active));
+      });
+
+      const barStatus = document.getElementById("win-bar-status");
+      barStatus.textContent = (pinned ? "📌 " : "● ") + s.label;
+      barStatus.style.color = s.color;
+      document.getElementById("win-bar-text").textContent = s.barText;
+      document.getElementById("win-popup-fresh").textContent = s.freshness;
+
+      const popupOpen = document.getElementById("win-popup").style.display !== "none";
+      const total = currentFeed === "team" && currentState === "live" ? 2 : pool.length;
+      document.getElementById("win-details-btn").textContent = `Matches (${total}) ${popupOpen ? "▾" : "▸"}`;
+
+      const cardState = document.getElementById("win-card1-state");
+      cardState.textContent = s.cardState;
+      cardState.style.color = s.color;
+      document.getElementById("win-card1-teams").textContent = s.teams;
+      document.getElementById("win-card1-series").textContent = s.series;
+      document.getElementById("win-card1-scores").innerHTML = s.scoresHtml;
+      document.getElementById("win-card1-status").textContent = s.status;
+      document.getElementById("win-strip-badge").style.display = pinned ? "inline-block" : "none";
+      document.getElementById("pin-btn-1").textContent = pinned
+        ? "✓ Showing on Live Strip (Click to Auto)"
+        : "Show on Live Strip";
+
+      const sampleDetails = s.details || (s.scoresHtml ? {
+        strip: s.cardState === "COMPLETED" ? "Final Scorecard Summary" : "CRR 4.18  ·  Partnership 38 (52)",
+        bat: ["Lead Batter* 54 (68)", "Partner     29 (41)"],
+        bowl: ["Strike Bowler 12-2-36-2 · 3.00"],
+        wicket: s.cardState === "COMPLETED" ? s.status : "Last wkt: Top-order caught at slip",
+        balls: ["0", "1", "0", "4", "0", "1"]
+      } : null);
+
+      const moreBtn = document.getElementById("win-more-btn");
+      const drawer = document.getElementById("win-detail-drawer");
+      if (sampleDetails) {
+        moreBtn.style.display = "inline-block";
+        moreBtn.textContent = detailsOpen ? "Less ▴" : "More ▾";
+        moreBtn.setAttribute("aria-expanded", String(detailsOpen));
+        drawer.style.display = detailsOpen ? "block" : "none";
+        const ballHtml = (sampleDetails.balls || []).map(tok => {
+          const cls = tok === "W" ? " wkt" : (tok === "4" ? " four" : (tok === "6" ? " six" : ""));
+          return `<span class="win-ball-chip${cls}">${tok}</span>`;
+        }).join("");
+        drawer.innerHTML =
+          `<div class="win-detail-strip">${sampleDetails.strip}</div>` +
+          `<div class="win-detail-cols">` +
+            `<div><div class="win-detail-hdr">Batting</div>` +
+              sampleDetails.bat.map(l => `<div class="win-detail-line">${l}</div>`).join("") +
+            `</div>` +
+            `<div><div class="win-detail-hdr">Bowling</div>` +
+              sampleDetails.bowl.map(l => `<div class="win-detail-line">${l}</div>`).join("") +
+            `</div>` +
+          `</div>` +
+          (sampleDetails.wicket ? `<div class="win-detail-wicket">${sampleDetails.wicket}</div>` : "") +
+          (ballHtml ? `<div class="win-detail-balls"><span class="win-detail-hdr" style="margin:0 4px 0 0;">Recent:</span>${ballHtml}</div>` : "");
+      } else {
+        moreBtn.style.display = "none";
+        drawer.style.display = "none";
+      }
+
+      const scopeName = isTeam
+        ? (TEAM_LEAGUES[currentTeam] ? `${currentTeam} (+ ${TEAM_LEAGUES[currentTeam]})` : currentTeam)
+        : FEEDS.international.macScope;
+      document.getElementById("mac-bar-title").textContent = s.macTitle;
+      document.getElementById("mac-menu-state").textContent = s.cardState + " · " + scopeName + " · " + s.freshness;
+      document.getElementById("mac-menu-teams").innerHTML = "<strong>" + s.macItem + "</strong>";
+      document.getElementById("mac-menu-score1").textContent = s.macScore1;
+      document.getElementById("mac-menu-score2").textContent = s.macScore2;
+      document.getElementById("mac-menu-status").textContent = s.status;
+      const macBat = document.getElementById("mac-menu-bat");
+      const macBowl = document.getElementById("mac-menu-bowl");
+      const macBalls = document.getElementById("mac-menu-balls");
+      if (sampleDetails) {
+        macBat.style.display = "block";
+        macBowl.style.display = "block";
+        macBalls.style.display = "block";
+        macBat.textContent = "\u2003Bat: " + sampleDetails.bat.join(" · ");
+        macBowl.textContent = "\u2003Bowl: " + sampleDetails.bowl[0];
+        macBalls.textContent = "\u2003Overs: " + sampleDetails.balls.join(" ");
+      } else {
+        macBat.style.display = "none";
+        macBowl.style.display = "none";
+        macBalls.style.display = "none";
+      }
+    }
+
+    function setPlatform(platform) {
+      const isWin = platform === "win";
+      document.getElementById("tab-win").classList.toggle("active", isWin);
+      document.getElementById("tab-win").setAttribute("aria-selected", String(isWin));
+      document.getElementById("tab-mac").classList.toggle("active", !isWin);
+      document.getElementById("tab-mac").setAttribute("aria-selected", String(!isWin));
+      document.getElementById("preview-win").style.display = isWin ? "block" : "none";
+      document.getElementById("preview-mac").style.display = isWin ? "none" : "block";
+    }
+
+    function setFeed(feed) {
+      if (!FEEDS[feed]) return;
+      currentFeed = feed;
+      currentCategory = "All";
+      matchIndex = 0;
+      renderPreview();
+    }
+
+    function toggleTeamGrid() {
+      teamGridOpen = !teamGridOpen;
+      const grid = document.getElementById("win-team-grid");
+      const btn = document.getElementById("change-team-btn");
+      grid.classList.toggle("open", teamGridOpen);
+      btn.setAttribute("aria-expanded", String(teamGridOpen));
+      btn.textContent = teamGridOpen ? "Change Team ▴" : "Change Team ▾";
+    }
+
+    function pickTeam(team) {
+      if (!TEAM_FIXTURES[team]) return;
+      currentTeam = team;
+      currentFeed = "team";
+      currentCategory = "All";
+      matchIndex = 0;
+      if (teamGridOpen) toggleTeamGrid();
+      renderPreview();
+    }
+
+    function setCategory(pill) {
+      currentCategory = pill;
+      matchIndex = 0;
+      renderPreview();
+    }
+
+    function setMatchState(key) {
+      if (!FEEDS[currentFeed][key]) return;
+      currentState = key;
+      matchIndex = 0;
+      renderPreview();
+    }
+
+    function cycleMatch(delta) {
+      const pool = activeMatches();
+      if (!pool.length) return;
+      matchIndex = (matchIndex + delta + pool.length) % pool.length;
+      renderPreview();
+    }
+
+    function toggleDetailsPopup() {
+      const popup = document.getElementById("win-popup");
+      const btn = document.getElementById("win-details-btn");
+      const hidden = popup.style.display === "none";
+      popup.style.display = hidden ? "block" : "none";
+      btn.setAttribute("aria-expanded", String(hidden));
+      renderPreview();
+    }
+
+    function togglePin() {
+      pinned = !pinned;
+      renderPreview();
+    }
+
+    function toggleCardDetails() {
+      detailsOpen = !detailsOpen;
+      renderPreview();
+    }
+
+    renderPreview();
+
+    (function detectOS() {
+      const ua = navigator.userAgent || "";
+      const isMac = /Macintosh|Mac OS X/i.test(ua);
+      if (isMac) {
+        const badge = document.getElementById("badge-mac");
+        badge.textContent = "Recommended for your Mac";
+        badge.classList.add("detected");
+        document.getElementById("mac-sub-label").textContent = "Recommended for your Mac";
+      } else {
+        const badge = document.getElementById("badge-win");
+        badge.textContent = "Recommended for your PC";
+        badge.classList.add("detected");
+        document.getElementById("win-sub-label").textContent = "Recommended for your PC · Portable .exe";
+      }
+    })();
+
+    (async function fetchLatestRelease() {
+      try {
+        const res = await fetch("https://api.github.com/repos/mabs7/cricket-tray/releases/latest");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.tag_name) {
+          document.getElementById("nav-version").textContent = data.tag_name;
+        }
+        if (Array.isArray(data.assets)) {
+          const winAsset = data.assets.find(a => a.name === "CricketTray-Windows.zip")
+            || data.assets.find(a => a.name === "PakCricket-Windows.zip");
+          const macAsset = data.assets.find(a => a.name === "CricketTray-Mac.zip")
+            || data.assets.find(a => a.name === "PakCricket-Mac.zip" || a.name === "PakCricket.zip");
+          if (winAsset) {
+            if (winAsset.browser_download_url) {
+              document.querySelectorAll('a[href*="CricketTray-Windows.zip"], a[href*="PakCricket-Windows.zip"]').forEach(el => {
+                el.href = winAsset.browser_download_url;
+              });
+            }
+            if (winAsset.size) {
+              const mb = (winAsset.size / (1024 * 1024)).toFixed(1);
+              document.getElementById("win-sub-label").textContent = `Portable .exe · ${mb} MB`;
+            }
+          }
+          if (macAsset) {
+            if (macAsset.browser_download_url) {
+              document.querySelectorAll('a[href*="CricketTray-Mac.zip"], a[href*="PakCricket-Mac.zip"]').forEach(el => {
+                el.href = macAsset.browser_download_url;
+              });
+            }
+            if (macAsset.size) {
+              const mb = (macAsset.size / (1024 * 1024)).toFixed(1);
+              document.getElementById("mac-sub-label").textContent = `Menu Bar .app · ${mb} MB`;
+            }
+          }
+        }
+      } catch (_) {}
+    })();
+  </script>
+</body>
+</html>
