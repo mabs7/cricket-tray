@@ -3,7 +3,7 @@
 A lightweight desktop score widget for **Windows** and **macOS** that keeps **Pakistan**, **senior men's international cricket**, and **6 major T20/Hundred leagues** (**PSL, IPL, BPL, Big Bash League, SA20, and The Hundred**) right on your screen while you work — free, portable, and ready out of the box with no API key or sign-up required.
 
 - **Windows:** A draggable, always-on-top floating score strip and system tray app.
-- **macOS:** A live ticker directly in your top-right menu bar.
+- **macOS:** Choose between an always-visible **Floating Score Bar** (default, stays visible when switching apps or Spaces) or the classic **Menu Bar Ticker**, plus a clickable **Boxed Scorecard** with batters, bowlers, and recent balls.
 
 🌐 Website & interactive preview: **[mabs7.github.io/cricket-tray](https://mabs7.github.io/cricket-tray/)**
 
@@ -24,9 +24,9 @@ A lightweight desktop score widget for **Windows** and **macOS** that keeps **Pa
 
 ## What It Does
 
-- **Always-visible score strip / menu bar:** Glance at live scores, overs, and match status without keeping browser tabs open.
+- **Always-visible score strip / menu bar:** Glance at live scores, overs, and match status without keeping browser tabs open. On macOS, the default **Floating Score Bar** stays visible across app switches and Spaces while keeping the menu bar compact (`🏏`), or you can switch **Display Mode** anytime to the **Menu Bar Ticker (Classic)**.
 - **Follow My Team or International:** Pick your team (**Pakistan + PSL**, **India + IPL**, **Australia + BBL**, **England + The Hundred**, **South Africa + SA20**, **Bangladesh + BPL**, or other Test nations) or switch to **International** for all senior international matches and 6 major leagues. Your selection stays saved automatically (and legacy `PAK Cricket` preferences migrate automatically).
-- **Minimal Bar, Full Match Details On Demand:** Keep the floating score strip distraction-free, then open **Match Center** (or click **`More ▾`** / any match card on Windows, or open the dropdown/match submenu on macOS) for current batters (`runs`, `balls`, `4s`, `6s`, `SR`), active bowler (`O-M-R-W`, `Econ`), last wicket, run rates, partnership, and recent balls.
+- **Minimal Bar, Full Match Details On Demand:** Keep the floating score strip distraction-free, then open **Match Center** / click **`More ▾`** on Windows — or click the floating bar (**Open Scorecard Box**) on macOS for a high-contrast **Boxed Scorecard** — displaying current batters (`runs`, `balls`, `4s`, `6s`, `SR`), active bowler (`O-M-R-W`, `Econ`), last wicket, run rates, partnership, and recent balls.
 - **Match Center & Quick Strip Pinning:** Browse live, paused, upcoming, and recent matches, filter by competition, or pin any match to the bar (`Show on Live Strip` or `◀` / `▶` controls).
 - **Accurate Break & Delay Labels:** Displays **STUMPS**, **LUNCH**, **TEA**, **DINNER**, **DRINKS**, **INNINGS BREAK**, **RAIN DELAY**, **WET OUTFIELD**, or **BAD LIGHT** instead of a misleading `LIVE` badge when play is paused, plus chronological Test innings and declared totals (e.g., `434/9d`).
 - **Smart Refresh Schedule:** Polls every **45 seconds** during active play, **2 minutes** during mid-day breaks/delays, **5 minutes** overnight at Stumps or ahead of today's scheduled matches, and **30 minutes** when no fixtures are scheduled.
@@ -63,15 +63,15 @@ A lightweight desktop score widget for **Windows** and **macOS** that keeps **Pa
 
 1. Download [CricketTray-Mac.zip](https://github.com/mabs7/cricket-tray/releases/latest/download/CricketTray-Mac.zip).
 2. Unzip the archive and drag `CricketTray.app` to Applications (or run it directly).
-3. Double-click `CricketTray.app` — live scores appear in the top-right menu bar.
+3. Double-click `CricketTray.app` — live scores appear in a persistent **Floating Score Bar** (stays visible across app switches) with a compact `🏏` icon in your menu bar, or switch **Display Mode** to **Menu Bar Ticker (Classic)** anytime.
 
 | Control | What it does |
 |---|---|
-| **Menu bar ticker** | Shows the active match score, status, or break label |
-| **Click the menu bar item** | View scores, inline batters/bowler/recent balls, upcoming matches, and refresh age |
-| **Match submenus** | Expand any fixture for batters, bowlers, last wicket, recent overs, or pin to bar |
-| **Feed menu** | Switch between **International & Leagues** and **My Team** |
-| **Refresh now / Quit** | Fetch scores manually or exit the widget |
+| **Drag the floating bar (`⋮`)** | Move it anywhere on screen (position is remembered) |
+| **Click the bar / `Scorecard ▾`** | Open the high-contrast **Boxed Scorecard** with batters, bowlers, last wicket & recent balls |
+| **`◀` / `▶` on bar or `Show ▸`** | Switch matches directly from the bar or Boxed Scorecard |
+| **`Mode` button / `Display Mode` menu** | Toggle anytime between **Floating Score Bar** and **Menu Bar Ticker (Classic)** |
+| **Menu bar item (`🏏` or ticker)** | Open Scorecard Box, view match details/submenus, switch **Feed**, refresh, or quit |
 
 ### Optional: Start automatically on macOS
 Open **System Settings → General → Login Items** and add `CricketTray.app`.

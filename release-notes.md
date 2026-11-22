@@ -1,20 +1,15 @@
-## Cricket Tray v3.0.0
+## Cricket Tray v3.0.1
 
-### Rebrand from PAK Cricket to Cricket Tray
-- Renamed the desktop app and release packages from **PAK Cricket** (`PakCricket.exe` / `PakCricket.app`) to **Cricket Tray** (`CricketTray.exe` / `CricketTray.app`), reflecting support for all 12 international teams and 6 major T20/Hundred leagues alongside Pakistan cricket.
-- Preferences automatically migrate from `PakCricket/settings.json` to `CricketTray/settings.json` on first run.
+### macOS Persistent Floating Score Bar & Display Mode Choice
+- Added a native, draggable, non-activating **Floating Score Bar** (`MacFloatingBar`) on macOS that stays visible across app switches (e.g., Chrome, IDEs) and macOS Spaces without stealing focus, while keeping the menu bar item compact (`🏏`) so it stays clear of menu bar overflow and notches.
+- Preserved the original **Menu Bar Ticker (Classic)** as an explicit user choice via `Display Mode` (saved locally in `CricketTray/settings.json` as `mac_display_mode`), letting you switch between **Floating Score Bar** and **Menu Bar Ticker (Classic)** anytime from the Scorecard Box, floating bar right-click menu, or menu bar dropdown.
 
-### On-Demand Match Details (Batters, Bowler, Last Wicket & Recent Balls)
-- Kept the floating strip (Windows) and menu bar ticker (macOS) minimal and score-focused at a glance.
-- Added an expandable **`More ▾`** drawer in Windows **Match Center** (also toggled by clicking a match card) displaying batters at the crease (`runs`, `balls`, `4s`, `6s`, `SR`), active bowlers (`O-M-R-W`, `Econ`), last wicket, CRR/RRR, partnership, target, and color-coded recent balls.
-- Added inline live batting, bowling, and recent ball rows for the active match plus expandable per-match submenus on macOS.
-
-### Windows & macOS UI Polish
-- **Windows:** Rounded DWM floating strip with drag grip (`⋮`), semantic status badge hierarchy (red LIVE, sky breaks, amber upcoming, green primary actions), deterministic control bar width, dark Match Center title bar on Windows 10/11, monitor-aware popup placement, smooth touchpad scrolling with auto-hiding scrollbar, 2-column compact team scoreboards, `Next`/`Previous Match` tray items, and sharper 4× supersampled tray/app icons.
-- **macOS:** More compact menu bar formatting with grouped Test innings, top-positioned update prompt, consolidated `Feed` selector menu, and per-match action submenus.
+### macOS Prominent Boxed Scorecard & High-Contrast Menu
+- Clicking the floating bar (or choosing **Open Scorecard Box** in the menu bar dropdown) opens a high-contrast dark-slate **Boxed Scorecard** (`MacScorecardPanel`) featuring bold white team names, large emerald scores, semantic status pills (`LIVE`, `STUMPS`/break phases, `TODAY`, `COMPLETED`), aligned **BATTER** (`R`, `B`, `4s`, `6s`, `SR`) and **BOWLER** (`O`, `M`, `R`, `W`, `ECON`) tables, `CRR`/`RRR`/`P'ship`/`Target`, `Last wkt`, color-coded recent-ball chips, match selection, `Feed` selector, and `Open on Cricbuzz ↗`.
+- Styled informational dropdown rows in the classic `rumps` menu bar menu with bright `NSAttributedString` text instead of dimmed disabled gray.
 
 ### Downloads & Upgrade Note
-- **Windows:** Unzip `CricketTray-Windows.zip` and run `CricketTray.exe`. Existing Windows `v2.8.0` / `v2.9.1` users can upgrade seamlessly from inside the app (a compatibility `PakCricket-Windows.zip` bridge asset is included in this release).
-- **macOS:** Unzip `CricketTray-Mac.zip` and open `CricketTray.app` (macOS users upgrading from `v2.9.1` should install `CricketTray.app` from this release and remove the older `PakCricket.app`).
+- **Windows:** Unzip `CricketTray-Windows.zip` and run `CricketTray.exe` (a temporary `PakCricket-Windows.zip` bridge asset remains included for Windows `v2.8.0` / `v2.9.1` upgraders).
+- **macOS:** Unzip `CricketTray-Mac.zip` and open `CricketTray.app`.
 
 The app remains unsigned, free, API-key-free, and telemetry-free; upstream feed format changes can still interrupt updates while retaining the last reliable score.
